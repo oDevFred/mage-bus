@@ -9,7 +9,7 @@ Este é um projeto em desenvolvimento para um sistema de gerenciamento de transp
 * **Banco de Dados:** MongoDB.
 
 ## Estrutura do Projeto
-
+```
 mage-bus/
 ├── backend/                  # Servidor Node.js (API REST)
 │   ├── src/
@@ -37,6 +37,7 @@ mage-bus/
 └── .gitignore                # Arquivos e pastas a serem ignorados pelo Git
 └── LICENSE                   # Arquivo de licença do projeto
 └── README.md                 # Este arquivo
+```
 
 ## Configuração e Execução
 
