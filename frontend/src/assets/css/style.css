@@ -1,0 +1,13 @@
+/* Estilos gerais, se precisar */
+.navbar-custom {
+    background-color: #007bff; /* Cor primária */
+}
+
+.navbar-custom .navbar-brand,
+.navbar-custom .nav-link {
+    color: #ffffff; /* Texto branco */
+}
+
+.navbar-custom .nav-link:hover {
+    color: #e0e0e0;
+}
