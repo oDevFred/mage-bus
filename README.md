@@ -20,7 +20,7 @@ Um sistema completo para gerenciamento de frotas de ônibus, incluindo módulos 
 ### Frontend (Interface do Usuário)
 * **HTML5 / CSS3**: Estrutura e estilo.
 * **JavaScript (Vanilla JS)**: Lógica do lado do cliente.
-* *(Se usar alguma biblioteca/framework como Axios, Bootstrap, etc., adicione aqui)*
+* **Bootstrap**: Framework para deixar mais bonito e responsivo.
 
 ---
 
@@ -34,10 +34,8 @@ Um sistema completo para gerenciamento de frotas de ônibus, incluindo módulos 
     * Atualização do status do ônibus em tempo real.
 * **Painel da Central de Controle**:
     * Visualização de todos os ônibus e seus status.
-    * *(Adicione outras funcionalidades que a central de controle possa ter/terá)*
 * **Painel do Administrador**:
     * Controle total sobre usuários e ônibus.
-    * *(Adicione outras funcionalidades que o admin possa ter/terá)*
 
 ---
 
