@@ -6,25 +6,31 @@ import {
     createOnibus,
     updateOnibus,
     deleteOnibus,
-    getMyOnibus, // Importe a nova função
-    updateMyOnibusStatus // Importe a nova função
+    getMyOnibus,
+    updateMyOnibusStatus
 } from '../controllers/onibusController';
 import { protect, authorize } from '../middlewares/authMiddleware';
 
 const router = express.Router();
 
-// Rotas para Admin/Central de Controle
+// **** COMECE SEMPRE COM AS ROTAS MAIS ESPECÍFICAS ****
+
+// Rota para o motorista obter seu próprio ônibus
+router.route('/meu')
+    .get(protect, getMyOnibus);
+
+// Rota para o motorista atualizar o status de seu próprio ônibus
+router.route('/meu/status')
+    .put(protect, updateMyOnibusStatus);
+
+// Rotas para Admin/Central de Controle (gerais, depois das específicas)
 router.route('/')
     .get(protect, authorize('admin', 'centralControle'), getOnibus)
-    .post(protect, authorize('admin'), createOnibus); // Apenas admin pode criar
+    .post(protect, authorize('admin'), createOnibus);
 
 router.route('/:id')
     .get(protect, authorize('admin', 'centralControle'), getOnibusById)
-    .put(protect, authorize('admin'), updateOnibus) // Apenas admin pode atualizar
-    .delete(protect, authorize('admin'), deleteOnibus); // Apenas admin pode deletar
-
-// NOVAS ROTAS PARA MOTORISTA
-router.get('/meu', protect, authorize('motorista'), getMyOnibus); // Motorista logado pode ver seu ônibus
-router.put('/meu/status', protect, authorize('motorista'), updateMyOnibusStatus); // Motorista logado pode atualizar o status do seu ônibus
+    .put(protect, authorize('admin'), updateOnibus)
+    .delete(protect, authorize('admin'), deleteOnibus);
 
 export default router;
