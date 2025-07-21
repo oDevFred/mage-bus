@@ -30,13 +30,7 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
     try {
         const decoded: any = jwt.verify(token, process.env.JWT_SECRET as string);
 
-        console.log('Token Decodificado:', decoded);
-        console.log('ID do Usuário do Token:', decoded.id);
-
         const user = await Usuario.findById(decoded.id) as IUsuario | null;
-
-        console.log('Usuário Encontrado no Banco:', user ? user.email : 'Nenhum');
-        console.log('Role do Usuário Encontrado:', user ? user.role : 'N/A');
 
         if (!user) {
             return res.status(401).json({ success: false, message: 'Token inválido. Usuário não encontrado.' });
@@ -63,14 +57,10 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
 // Middleware de autorização por role (mantido para outras rotas, mas não usado para /meu agora)
 export const authorize = (...roles: string[]) => {
     return (req: CustomRequest, res: Response, next: NextFunction) => {
-        console.log('Roles permitidas para esta rota:', roles); // Deixe a mensagem original ou a que preferir
-        console.log('Role do usuário logado (req.user.role):', req.user?.role);
 
         if (!req.user || !roles.includes(req.user.role)) { // Descomente estas linhas
-            console.log('ACESSO NEGADO: Role do usuário não está entre as permitidas.'); // Descomente
             return res.status(403).json({ success: false, message: `O usuário com role ${req.user ? req.user.role : 'desconhecida'} não tem permissão para acessar esta rota.` }); // Descomente
         }
-        console.log('ACESSO PERMITIDO!'); // Descomente
         next(); // Descomente
     };
 };
