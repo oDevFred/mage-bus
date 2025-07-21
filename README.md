@@ -1,14 +1,47 @@
-# Mage-Bus: Sistema de Gerenciamento de Transporte Urbano
+# 🚌 Mage-Bus - Sistema de Gerenciamento de Frotas de Ônibus
 
-Este é um projeto em desenvolvimento para um sistema de gerenciamento de transporte urbano, focado em operações de ônibus, passageiros, motoristas e central de controle.
+Um sistema completo para gerenciamento de frotas de ônibus, incluindo módulos para administradores, central de controle e motoristas. O objetivo é otimizar a operação e a comunicação dentro de uma empresa de transporte.
 
-## Tecnologias Utilizadas
+---
 
-* **Backend:** Node.js, Express, TypeScript, Mongoose (MongoDB), JSON Web Tokens (JWT) para autenticação.
-* **Frontend:** HTML, CSS (Bootstrap 5), JavaScript puro.
-* **Banco de Dados:** MongoDB.
+## 🚀 Tecnologias Utilizadas
 
-## Estrutura do Projeto
+### Backend (API REST)
+* **Node.js**: Ambiente de execução JavaScript.
+* **Express.js**: Framework web para Node.js.
+* **TypeScript**: Linguagem para tipagem estática.
+* **Mongoose**: ODM (Object Data Modeling) para MongoDB.
+* **MongoDB**: Banco de dados NoSQL.
+* **JWT (JSON Web Tokens)**: Para autenticação.
+* **Bcrypt**: Para hashing de senhas.
+* **Dotenv**: Para gerenciamento de variáveis de ambiente.
+* **CORS**: Para lidar com requisições de diferentes origens.
+
+### Frontend (Interface do Usuário)
+* **HTML5 / CSS3**: Estrutura e estilo.
+* **JavaScript (Vanilla JS)**: Lógica do lado do cliente.
+* *(Se usar alguma biblioteca/framework como Axios, Bootstrap, etc., adicione aqui)*
+
+---
+
+## ✨ Funcionalidades
+
+* **Autenticação e Autorização**: Sistema robusto de login com JWT e controle de acesso baseado em perfis (Admin, Central de Controle, Motorista).
+* **Gerenciamento de Usuários**: CRUD (Criação, Leitura, Atualização, Exclusão) de usuários (principalmente por Admin).
+* **Gerenciamento de Ônibus**: CRUD completo de informações dos ônibus.
+* **Painel do Motorista**:
+    * Visualização do próprio ônibus atribuído.
+    * Atualização do status do ônibus em tempo real.
+* **Painel da Central de Controle**:
+    * Visualização de todos os ônibus e seus status.
+    * *(Adicione outras funcionalidades que a central de controle possa ter/terá)*
+* **Painel do Administrador**:
+    * Controle total sobre usuários e ônibus.
+    * *(Adicione outras funcionalidades que o admin possa ter/terá)*
+
+---
+
+## 📂 Estrutura do Projeto
 ```
 mage-bus/
 ├── backend/                  # Servidor Node.js (API REST)
@@ -17,7 +50,7 @@ mage-bus/
 │   │   ├── middlewares/      # Funções intermediárias (autenticação, autorização)
 │   │   ├── models/           # Schemas e modelos do Mongoose (Usuário, Ônibus)
 │   │   ├── routes/           # Definição das rotas da API
-│   │   └── app.ts            # Ponto de entrada do backend
+│   │   ├── app.ts            # Ponto de entrada do backend
 │   ├── .env.example          # Exemplo de arquivo de variáveis de ambiente
 │   ├── package.json          # Dependências do backend
 │   └── tsconfig.json         # Configuração do TypeScript
@@ -34,86 +67,71 @@ mage-bus/
 │   │   │   └── passageiro/   # Páginas do passageiro
 │   │   └── index.html        # Página inicial
 │   └── package.json          # (Opcional, se usar ferramentas de build no frontend)
-└── .gitignore                # Arquivos e pastas a serem ignorados pelo Git
-└── LICENSE                   # Arquivo de licença do projeto
+├── .gitignore                # Arquivos e pastas a serem ignorados pelo Git
 └── README.md                 # Este arquivo
 ```
-
-## Configuração e Execução
+## ⚙️ Como Rodar o Projeto
 
 ### Pré-requisitos
+* [Node.js](https://nodejs.org/) (versão LTS recomendada)
+* [npm](https://www.npmjs.com/) (gerenciador de pacotes do Node.js)
+* [MongoDB](https://www.mongodb.com/try/download/community) (instância local ou via MongoDB Atlas)
 
-* Node.js (versão 18 ou superior recomendada)
-* MongoDB (rodando localmente ou acesso a um Atlas DB)
-* npm (gerenciador de pacotes do Node.js)
+### Configuração do Backend
 
-### Backend
-
-1.  **Navegue até a pasta `backend`:**
+1.  **Clone o repositório:**
     ```bash
-    cd backend
+    git clone [https://github.com/seu-usuario/mage-bus.git](https://github.com/seu-usuario/mage-bus.git)
+    cd mage-bus/backend
     ```
-2.  **Instale as dependências:**
+2.  **Crie o arquivo `.env`:**
+    No diretório `backend/`, crie um arquivo chamado `.env` e adicione as seguintes variáveis de ambiente, substituindo os valores pelos seus:
+    ```env
+    PORT=3000
+    MONGODB_URI=mongodb://localhost:27017/magebus_db # ou sua URI do MongoDB Atlas
+    JWT_SECRET=seuSegredoJWTSuperSeguroAqui # Use uma string longa e aleatória
+    JWT_EXPIRE=1h
+    ```
+3.  **Instale as dependências:**
     ```bash
     npm install
     ```
-3.  **Crie um arquivo `.env`:**
-    Crie um arquivo chamado `.env` na raiz da pasta `backend` (ao lado de `package.json` e `src`). Copie o conteúdo de `.env.example` para ele e preencha com suas configurações:
-    ```
-    PORT=3000
-    MONGODB_URI=mongodb://localhost:27017/magebus
-    JWT_SECRET=seu_segredo_jwt_muito_seguro_e_longo
-    JWT_EXPIRES_IN=1h
-    ```
-    Certifique-se de usar um `JWT_SECRET` longo e aleatório.
 4.  **Inicie o servidor backend:**
     ```bash
     npm start
     ```
     O servidor estará rodando em `http://localhost:3000`.
 
-### Frontend
+### Configuração do Frontend
 
-1.  **Navegue até a pasta `frontend`:**
+1.  **Navegue até o diretório do frontend:**
     ```bash
-    cd frontend
+    cd ../frontend
     ```
-2.  **(Opcional) Instale dependências se houver:**
-    Se você adicionar um `package.json` e dependências específicas para o frontend (como frameworks ou ferramentas de build), execute:
-    ```bash
-    npm install
-    ```
-3.  **Abra o `index.html` com Live Server:**
-    Use a extensão "Live Server" do VS Code para abrir o arquivo `frontend/src/index.html`. Isso garantirá que o frontend seja servido corretamente em uma porta separada (e.g., `http://127.0.0.1:5500`).
+2.  **Abra o `index.html` em seu navegador** ou use uma extensão de servidor local (ex: Live Server para VS Code) para servir a pasta `frontend/`.
+    Se você estiver usando o Live Server, o frontend provavelmente estará em `http://127.0.0.1:5500` ou similar. Certifique-se de que o frontend está configurado para fazer requisições para `http://localhost:3000`.
 
-## Rotas da API (Backend)
+---
 
-As rotas da API estão disponíveis em `http://localhost:3000/api/v1/`.
+## 🗺️ Roadmap (Próximos Passos)
 
-### Autenticação (`/api/v1/auth`)
+* Implementar funcionalidades de geolocalização dos ônibus.
+* Criar dashboards interativos para a Central de Controle.
+* Desenvolver o módulo para passageiros.
+* Adicionar validação de entrada de dados mais robusta.
+* Implementar testes unitários e de integração.
+* Melhorar a interface de usuário do frontend.
 
-* `POST /register`: Registrar novo usuário.
-    * **Body:** `{ "nome": "...", "email": "...", "senha": "...", "role": "passageiro" | "motorista" | "centralControle" | "admin" }`
-* `POST /login`: Fazer login.
-    * **Body:** `{ "email": "...", "senha": "..." }`
-* `GET /me` (Protegida): Obter informações do usuário logado.
-    * **Header:** `Authorization: Bearer <token_jwt>`
+---
 
-### Gerenciamento de Ônibus (`/api/v1/onibus`)
+## 📄 Licença
 
-* `GET /` (Protegida): Listar todos os ônibus.
-* `GET /:id` (Protegida): Obter detalhes de um ônibus específico.
-* `POST /` (Protegida - `admin`): Adicionar novo ônibus.
-    * **Body:** `{ "placa": "...", "linha": "...", "capacidade": ..., "status": "emOperacao" | "parado" | "emManutencao" | "indisponivel", "motorista": "ID_DO_MOTORISTA" (opcional) }`
-* `PUT /:id` (Protegida - `admin`): Atualizar informações de um ônibus.
-    * **Body:** `{ "placa": "...", "linha": "...", ... }`
-* `DELETE /:id` (Protegida - `admin`): Excluir um ônibus.
+Todos os direitos reservados.
 
-## Licença
+Este software e todos os arquivos associados a ele são propriedade exclusiva de Caio Eduardo Ferreira Frederico.
 
-Este projeto está sob uma licença **privativa**. Todos os direitos reservados.
-A reprodução, modificação, distribuição ou uso comercial deste software sem permissão explícita do(s) autor(es) é estritamente proibida.
+É expressamente proibida a reprodução, modificação, distribuição, venda ou qualquer forma de uso comercial ou não-comercial deste software, no todo ou em parte, sem a permissão expressa e por escrito do(s) detentor(es) dos direitos autorais.
 
-## Contato
+Para quaisquer perguntas sobre o licenciamento ou permissões, entre em contato com caio.frederico2001@outlook.com.
 
-oDevFred - caio.frederico2001@outlook.com
+© 2025 Caio Eduardo Ferreira Frederico. Todos os direitos reservados.
