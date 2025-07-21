@@ -1,7 +1,9 @@
 // backend/src/controllers/authController.ts
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import Usuario from '../models/Usuario';
-import { CustomRequest } from '../middlewares/authMiddleware'; // Importa a interface estendida
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { CustomRequest } from '../middlewares/authMiddleware';
 
 // @desc    Registrar um novo usuário
 // @route   POST /api/v1/auth/register
@@ -59,13 +61,30 @@ export const login = async (req: Request, res: Response) => {
 // @desc    Obter usuário logado (para teste de rota protegida)
 // @route   GET /api/v1/auth/me
 // @access  Private
-export const getMe = async (req: CustomRequest, res: Response) => {
-    // req.user é populado pelo middleware protect
-    const usuario = await Usuario.findById(req.user?.id);
-
-    res.status(200).json({ success: true, data: usuario });
+export const getMe = async (req: CustomRequest, res: Response, next: NextFunction) => {
+    try {
+        // TypeScript agora saberá que req.user existe aqui
+        const userFound = await Usuario.findById(req.user?.id); // req.user agora tem um tipo conhecido
+        if (!userFound) {
+        return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+        }
+        res.status(200).json({ success: true, data: userFound });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 };
 
+// @desc    Obter todos os usuários com role 'motorista'
+// @route   GET /api/v1/auth/motoristas
+// @access  Private (Admin ou Central de Controle pode ver, mas vamos proteger com 'protect' por enquanto)
+export const getMotoristas = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const motoristas = await Usuario.find({ role: 'motorista' }).select('-senha -__v'); // Não retorna senha
+        res.status(200).json({ success: true, count: motoristas.length, data: motoristas });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
 
 // Função auxiliar para enviar o token JWT
 const sendTokenResponse = (usuario: any, statusCode: number, res: Response) => {

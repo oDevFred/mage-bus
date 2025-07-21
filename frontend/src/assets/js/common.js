@@ -27,14 +27,14 @@ function clearAuthData() {
 
 // Função para redirecionar o usuário com base na role
 function redirectToDashboard(role) {
-    let redirectUrl = '/frontend/src/pages/auth/login.html';
+    let redirectUrl = '/frontend/src/pages/auth/login.html'; // Padrão
 
     switch (role) {
         case 'admin':
             redirectUrl = '/frontend/src/pages/admin/index.html';
             break;
         case 'motorista':
-            redirectUrl = '/frontend/src/pages/motorista/index.html';
+            redirectUrl = '/frontend/src/pages/motorista/index.html'; // <--- VERIFIQUE ESTE CAMINHO
             break;
         case 'passageiro':
             redirectUrl = '/frontend/src/pages/passageiro/index.html';
@@ -43,7 +43,7 @@ function redirectToDashboard(role) {
             redirectUrl = '/frontend/src/pages/central-controle/index.html';
             break;
         default:
-            console.warn('Role desconhecida ou não especificada, redirecionando para a página inicial de login.');
+            console.warn('Role desconhecida. Redirecionando para login.');
             break;
     }
     window.location.href = redirectUrl;

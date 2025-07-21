@@ -8,16 +8,16 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <style>
         body {
-            background-color: #f8f9fa;
+            background-color: var(--magebus-light-bg); /* Usando variável CSS */
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            flex-direction: column; /* Para centralizar verticalmente */
+            flex-direction: column;
         }
-        .main-content {
-            background-color: #ffffff;
+        .dashboard-card { /* Classe renomeada de .main-content para .dashboard-card para consistência */
+            background-color: var(--magebus-white);
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             padding: 40px;
@@ -25,12 +25,12 @@
             max-width: 600px;
             width: 90%;
         }
-        .main-content h1 {
-            color: #007bff;
+        .dashboard-card h1 {
+            color: var(--magebus-primary-dark); /* Usando variável CSS */
             margin-bottom: 20px;
         }
-        .main-content p {
-            color: #6c757d;
+        .dashboard-card p {
+            color: var(--magebus-secondary); /* Usando variável CSS */
             margin-bottom: 30px;
         }
         .loading-spinner {
@@ -39,11 +39,10 @@
     </style>
 </head>
 <body>
-    <div class="main-content" id="mainContent">
+    <div class="dashboard-card" id="mainContent">
         <h1>Bem-vindo ao Mage-Bus!</h1>
         <p>Aguarde, estamos verificando sua sessão...</p>
-        <div class="spinner-border text-primary loading-spinner" role="status">
-            <span class="visually-hidden">Carregando...</span>
+        <div class="spinner-border text-dark loading-spinner" role="status"> <span class="visually-hidden">Carregando...</span>
         </div>
     </div>
 
@@ -54,17 +53,9 @@
             const token = magebus.getAuthToken();
             const role = magebus.getUserRole();
 
-            // Se o token e a role existirem, tenta redirecionar
-            if (token && role) {
-                console.log('Token e Role encontrados. Tentando redirecionar...');
-                magebus.redirectToDashboard(role);
-            } else {
-                // Caso contrário, redireciona para a página de login
-                console.log('Nenhum token ou role encontrado. Redirecionando para o login.');
-                setTimeout(() => {
-                    window.location.href = 'pages/auth/login.html';
-                }, 1500); // Dá um pequeno tempo para a mensagem "verificando" aparecer
-            }
+            setTimeout(() => {
+                window.location.href = 'pages/auth/login.html';
+            }, 1500);
         });
     </script>
 </body>

@@ -1,13 +1,126 @@
-/* Estilos gerais, se precisar */
-.navbar-custom {
-    background-color: #007bff; /* Cor primária */
+/* Definição de Cores da Paleta Mage-Bus */
+:root {
+    --magebus-primary: #FFD10C; /* Amarelo principal */
+    --magebus-primary-dark: #CCAA0A; /* Amarelo mais escuro para hover/active */
+    --magebus-secondary: #6c757d; /* Cinza do Bootstrap para secundário */
+    --magebus-text-dark: #212529; /* Para textos escuros */
+    --magebus-light-bg: #f8f9fa; /* Fundo claro */
+    --magebus-white: #ffffff; /* Branco */
+    --magebus-blue-complement: #007bff; /* Um azul complementar se necessário */
 }
 
-.navbar-custom .navbar-brand,
-.navbar-custom .nav-link {
-    color: #ffffff; /* Texto branco */
+/* Estilos Gerais do Corpo */
+body {
+    font-family: Arial, sans-serif;
+    color: var(--magebus-text-dark);
+    background-color: var(--magebus-light-bg);
 }
 
-.navbar-custom .nav-link:hover {
-    color: #e0e0e0;
+/* Navbar Personalizada */
+.navbar-magebus {
+    background-color: var(--magebus-primary);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-magebus .navbar-brand,
+.navbar-magebus .nav-link {
+    color: var(--magebus-text-dark) !important; /* Texto escuro na navbar amarela */
+    font-weight: bold;
+}
+
+.navbar-magebus .nav-link:hover {
+    color: var(--magebus-primary-dark) !important; /* Escurece no hover */
+}
+
+.navbar-magebus .btn-outline-light {
+    color: var(--magebus-text-dark);
+    border-color: var(--magebus-text-dark);
+}
+
+.navbar-magebus .btn-outline-light:hover {
+    background-color: var(--magebus-text-dark);
+    color: var(--magebus-primary);
+}
+
+
+/* Estilos para cards de formulário (login, registro) */
+.auth-card, .dashboard-card {
+    background-color: var(--magebus-white);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    padding: 40px;
+}
+
+.auth-card h2, .dashboard-card h1 {
+    color: var(--magebus-primary-dark); /* Títulos com tom mais escuro do amarelo */
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/* Botões Primários do Bootstrap */
+/* Sobrescreve a cor primária do Bootstrap para os botões */
+.btn-primary {
+    background-color: var(--magebus-primary);
+    border-color: var(--magebus-primary-dark); /* Borda um pouco mais escura */
+    color: var(--magebus-text-dark); /* Texto escuro no botão amarelo */
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: var(--magebus-primary-dark); /* Escurece no hover/active */
+    border-color: var(--magebus-primary); /* Borda ainda na cor principal */
+    color: var(--magebus-text-dark);
+}
+
+/* Botões de sucesso (verde) */
+.btn-success {
+    background-color: #28a745; /* Mantendo verde padrão ou um que combine melhor */
+    border-color: #28a745;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+/* Links */
+a {
+    color: var(--magebus-blue-complement); /* Para links padrão */
+    text-decoration: none;
+}
+
+a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* Ajustes para a tabela (admin/index.html) */
+.table-responsive {
+    margin-top: 20px;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(255, 209, 12, 0.1); /* Um leve tom do amarelo para as linhas ímpares */
+}
+
+.table thead {
+    background-color: var(--magebus-primary-dark);
+    color: var(--magebus-text-dark);
+}
+
+.table thead th {
+    border-bottom: 2px solid var(--magebus-primary);
+}
+
+/* Alertas */
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+}
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
 }

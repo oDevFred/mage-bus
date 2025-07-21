@@ -8,19 +8,19 @@
     <link rel="stylesheet" href="../../assets/css/style.css">
     <style>
         body {
-            background-color: #f8f9fa;
+            background-color: var(--magebus-light-bg); /* Usando variável CSS */
         }
         .container {
             margin-top: 30px;
         }
-        .table-responsive {
-            margin-top: 20px;
+        .dashboard-card h1 { /* Para consistência, caso haja um título aqui */
+            color: var(--magebus-primary-dark);
         }
+        /* Os estilos da tabela e botões já serão afetados pelo style.css global */
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-magebus"> <div class="container-fluid">
             <a class="navbar-brand" href="#">Mage-Bus Admin</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -42,6 +42,8 @@
         <h1 class="mb-4">Gerenciamento de Ônibus</h1>
 
         <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#onibusModal" id="addBusBtn">Adicionar Novo Ônibus</button>
+        <button class="btn btn-primary mb-3 ms-2" data-bs-toggle="modal" data-bs-target="#userModal" id="addUserBtn">Adicionar Novo Usuário</button>
+
 
         <div id="message" class="alert d-none" role="alert"></div>
 
@@ -96,9 +98,11 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="motoristaId" class="form-label">Motorista (opcional - ID)</label>
-                            <input type="text" class="form-control" id="motoristaId" placeholder="ID do Motorista">
-                            <small class="form-text text-muted">Apenas insira o ID de um usuário do tipo 'motorista' aqui.</small>
+                            <label for="motoristaSelect" class="form-label">Motorista</label>
+                            <select class="form-select" id="motoristaSelect">
+                                <option value="">Nenhum Motorista</option>
+                                </select>
+                            <small class="form-text text-muted">Selecione um motorista para este ônibus.</small>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Salvar Ônibus</button>
                     </form>
@@ -107,20 +111,56 @@
         </div>
     </div>
 
+    <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalLabel">Adicionar Novo Usuário</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userForm">
+                        <div class="mb-3">
+                            <label for="userName" class="form-label">Nome Completo</label>
+                            <input type="text" class="form-control" id="userName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="userEmail" class="form-label">Endereço de E-mail</label>
+                            <input type="email" class="form-control" id="userEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="userPassword" class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="userPassword" required minlength="6">
+                        </div>
+                        <div class="mb-3">
+                            <label for="userRole" class="form-label">Tipo de Usuário</label>
+                            <select class="form-select" id="userRole" required>
+                                <option value="" disabled selected>Selecione o perfil</option>
+                                <option value="motorista">Motorista</option>
+                                <option value="centralControle">Central de Controle</option>
+                                <option value="admin">Administrador</option>
+                                </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Criar Usuário</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../assets/js/common.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // Verifica se o usuário é admin. Se não, redireciona.
             const userRole = magebus.getUserRole();
             if (!userRole || userRole !== 'admin') {
                 alert('Acesso negado. Apenas administradores podem acessar esta página.');
-                magebus.clearAuthData(); // Limpa dados inválidos
-                window.location.href = magebus.API_BASE_URL.replace('/api/v1', '') + '/pages/auth/login.html'; // Redireciona para login
+                magebus.clearAuthData();
+                window.location.href = '/frontend/src/pages/auth/login.html'; // Corrigido o path
                 return;
             }
 
-            // Referências para elementos DOM
             const onibusTableBody = document.getElementById('onibusTableBody');
             const onibusForm = document.getElementById('onibusForm');
             const onibusIdInput = document.getElementById('onibusId');
@@ -128,11 +168,55 @@
             const linhaInput = document.getElementById('linha');
             const capacidadeInput = document.getElementById('capacidade');
             const statusSelect = document.getElementById('status');
-            const motoristaIdInput = document.getElementById('motoristaId');
+            const motoristaSelect = document.getElementById('motoristaSelect');
             const messageDiv = document.getElementById('message');
             const onibusModal = new bootstrap.Modal(document.getElementById('onibusModal'));
+            const userModal = new bootstrap.Modal(document.getElementById('userModal')); // Instanciar o novo modal
+            const userForm = document.getElementById('userForm'); // Referência ao formulário de usuário
 
-            // Função para exibir mensagens
+            // Nova função para carregar motoristas
+            async function loadMotoristas() {
+                motoristaSelect.innerHTML = '<option value="">Carregando Motoristas...</option>';
+                try {
+                    const token = magebus.getAuthToken();
+                    const response = await fetch(`${magebus.API_BASE_URL}/auth/motoristas`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        motoristaSelect.innerHTML = '<option value="">Nenhum Motorista</option>'; // Opção padrão
+                        if (data.data.length > 0) {
+                            data.data.forEach(motorista => {
+                                const option = document.createElement('option');
+                                option.value = motorista._id;
+                                option.textContent = motorista.nome + ' (' + motorista.email + ')';
+                                motoristaSelect.appendChild(option);
+                            });
+                        }
+                    } else {
+                        showMessage(data.message || 'Falha ao carregar motoristas para seleção.', 'danger');
+                        motoristaSelect.innerHTML = '<option value="">Erro ao carregar motoristas</option>';
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar motoristas:', error);
+                    showMessage('Erro de conexão ao carregar motoristas.', 'danger');
+                    motoristaSelect.innerHTML = '<option value="">Erro de conexão</option>';
+                }
+            }
+
+            // Chame loadMotoristas ao carregar a página e quando o modal de ônibus for aberto
+            loadMotoristas(); // Carrega na inicialização da página
+
+            // Event listener para quando o modal do ônibus é aberto
+            onibusModal._element.addEventListener('show.bs.modal', () => {
+                loadMotoristas(); // Recarrega os motoristas cada vez que o modal abre para garantir a lista mais recente
+            });
+
             function showMessage(msg, type = 'success') {
                 messageDiv.classList.remove('d-none', 'alert-success', 'alert-danger');
                 messageDiv.classList.add(`alert-${type}`);
@@ -142,7 +226,6 @@
                 }, 3000);
             }
 
-            // Função para carregar ônibus
             async function loadOnibus() {
                 onibusTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Carregando ônibus...</td></tr>';
                 try {
@@ -168,8 +251,7 @@
                                     <td>${bus.linha}</td>
                                     <td>${bus.capacidade}</td>
                                     <td>${bus.status}</td>
-                                    <td>${bus.motorista ? bus.motorista.nome : 'Nenhum'}</td>
-                                    <td>
+                                    <td>${bus.motorista ? bus.motorista.nome + ' (' + bus.motorista.email + ')' : 'Nenhum'}</td> <td>
                                         <button class="btn btn-sm btn-info edit-btn" data-id="${bus._id}">Editar</button>
                                         <button class="btn btn-sm btn-danger delete-btn" data-id="${bus._id}">Excluir</button>
                                     </td>
@@ -186,7 +268,6 @@
                 }
             }
 
-            // Função para anexar event listeners aos botões de edição e exclusão
             function attachEventListeners() {
                 document.querySelectorAll('.edit-btn').forEach(button => {
                     button.onclick = async (event) => {
@@ -204,8 +285,10 @@
                                 linhaInput.value = bus.linha;
                                 capacidadeInput.value = bus.capacidade;
                                 statusSelect.value = bus.status;
-                                motoristaIdInput.value = bus.motorista ? bus.motorista._id : '';
+                                // NOVO: Define o valor do select de motorista
+                                motoristaSelect.value = bus.motorista ? bus.motorista._id : '';
                                 onibusModal.show();
+                                document.getElementById('onibusModalLabel').textContent = 'Editar Ônibus';
                             } else {
                                 showMessage(data.message || 'Falha ao carregar dados do ônibus para edição.', 'danger');
                             }
@@ -232,8 +315,8 @@
                             });
                             const data = await response.json();
                             if (response.ok) {
-                                showMessage(data.message || 'Ônibus excluído com sucesso!');
-                                loadOnibus(); // Recarrega a lista
+                                showMessage(data.message || 'Ônibus removido com sucesso!');
+                                loadOnibus();
                             } else {
                                 showMessage(data.message || 'Falha ao excluir ônibus.', 'danger');
                             }
@@ -245,7 +328,6 @@
                 });
             }
 
-            // Lidar com o envio do formulário (Adicionar/Editar)
             onibusForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
 
@@ -259,9 +341,15 @@
                     capacidade: parseInt(capacidadeInput.value),
                     status: statusSelect.value,
                 };
-                if (motoristaIdInput.value) {
-                    onibusData.motorista = motoristaIdInput.value;
+                // NOVO: Pega o valor do select, não do input de texto
+                const selectedMotoristaId = motoristaSelect.value;
+                if (selectedMotoristaId) {
+                    onibusData.motorista = selectedMotoristaId;
+                } else {
+                    // Se "Nenhum Motorista" for selecionado ou o campo estiver vazio, envia null
+                    onibusData.motorista = null;
                 }
+
 
                 try {
                     const token = magebus.getAuthToken();
@@ -277,9 +365,9 @@
 
                     if (response.ok) {
                         showMessage(`Ônibus ${id ? 'atualizado' : 'adicionado'} com sucesso!`);
-                        onibusModal.hide(); // Fecha o modal
-                        onibusForm.reset(); // Limpa o formulário
-                        loadOnibus(); // Recarrega a lista
+                        onibusModal.hide();
+                        onibusForm.reset();
+                        loadOnibus();
                     } else {
                         showMessage(data.message || `Falha ao ${id ? 'atualizar' : 'adicionar'} ônibus.`, 'danger');
                     }
@@ -289,20 +377,62 @@
                 }
             });
 
-            // Limpa o formulário quando o modal é aberto para adicionar (não para editar)
             document.getElementById('addBusBtn').addEventListener('click', () => {
                 onibusForm.reset();
                 onibusIdInput.value = '';
+                motoristaSelect.value = ''; // Limpa a seleção do motorista
                 document.getElementById('onibusModalLabel').textContent = 'Adicionar Novo Ônibus';
+                loadMotoristas(); // Garante que a lista de motoristas esteja atualizada ao abrir para adicionar
             });
+
+            // *** NOVO CÓDIGO PARA ADICIONAR USUÁRIO PELO ADMIN ***
+            document.getElementById('addUserBtn').addEventListener('click', () => {
+                userForm.reset(); // Limpa o formulário do usuário
+                document.getElementById('userModalLabel').textContent = 'Adicionar Novo Usuário';
+            });
+
+            userForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const name = document.getElementById('userName').value;
+                const email = document.getElementById('userEmail').value;
+                const password = document.getElementById('userPassword').value;
+                const role = document.getElementById('userRole').value; // A role agora é selecionada
+
+                try {
+                    const token = magebus.getAuthToken();
+                    const response = await fetch(`${magebus.API_BASE_URL}/auth/register`, { // Usa a rota de registro existente
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}` // Admin precisa de token para registrar outros
+                        },
+                        body: JSON.stringify({ nome: name, email, senha: password, role }),
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showMessage(`Usuário "${name}" (${role}) criado com sucesso!`);
+                        userModal.hide(); // Fecha o modal
+                        userForm.reset(); // Limpa o formulário
+                        // Opcional: Recarregar uma lista de usuários, se você criar uma
+                    } else {
+                        showMessage(data.message || `Falha ao criar usuário.`, 'danger');
+                    }
+                } catch (error) {
+                    console.error('Erro ao criar usuário:', error);
+                    showMessage('Erro de conexão ao criar usuário.', 'danger');
+                }
+            });
+
 
             // Logout
             document.getElementById('logoutBtn').addEventListener('click', () => {
                 magebus.clearAuthData();
-                window.location.href = '/frontend/src/pages/auth/login.html';
+                window.location.href = '/frontend/src/pages/auth/login.html'; // Corrigido o path de logout
             });
 
-            // Carrega os ônibus quando a página é carregada
             loadOnibus();
         });
     </script>

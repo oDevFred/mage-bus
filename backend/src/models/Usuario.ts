@@ -10,12 +10,15 @@ interface IUsuarioMethods {
 }
 
 // 2. Defina a interface para o documento de usuário, estendendo Document e IUsuarioMethods
-interface IUsuario extends Document, IUsuarioMethods {
+export interface IUsuario extends Document, IUsuarioMethods {
     nome: string;
     email: string;
-    senha: string;
+    senha?: string;
     role: 'passageiro' | 'motorista' | 'centralControle' | 'admin';
     createdAt: Date;
+    // Métodos que você adiciona ao schema (se existirem)
+    matchPassword(enteredPassword: string): Promise<boolean>;
+    getSignedJwtToken(): string;
 }
 
 // 3. Defina o esquema (Sem alterações aqui)
@@ -56,7 +59,7 @@ UsuarioSchema.pre<IUsuario>('save', async function (next) {
         next();
     }
     const salt = await bcrypt.genSalt(10);
-    this.senha = await bcrypt.hash(this.senha, salt);
+    this.senha = await bcrypt.hash(this.senha!, salt);
 });
 
 // Gerar e retornar token JWT

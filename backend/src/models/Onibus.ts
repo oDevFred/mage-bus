@@ -46,6 +46,6 @@ const OnibusSchema = new mongoose.Schema({
     },
 });
 
-const Onibus = mongoose.model('Onibus', OnibusSchema);
+const Onibus = mongoose.model('Onibus', OnibusSchema, 'onibus');
 
 export default Onibus;

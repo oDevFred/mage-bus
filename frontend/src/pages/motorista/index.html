@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mage-Bus - Painel do Motorista</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <style>
+        body {
+            background-color: var(--magebus-light-bg);
+        }
+        .container {
+            margin-top: 30px;
+        }
+        .bus-info-card {
+            background-color: var(--magebus-white);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-top: 20px;
+        }
+        .bus-info-card h2 {
+            color: var(--magebus-primary-dark);
+            margin-bottom: 20px;
+        }
+        .status-badge {
+            font-size: 1.1em;
+            padding: .6em .9em;
+            border-radius: .5rem;
+            display: inline-block;
+        }
+        .status-emOperacao { background-color: #28a745; color: white; } /* Bootstrap success */
+        .status-parado { background-color: #ffc107; color: var(--magebus-text-dark); } /* Bootstrap warning */
+        .status-emManutencao { background-color: #dc3545; color: white; } /* Bootstrap danger */
+        .status-indisponivel { background-color: #6c757d; color: white; } /* Bootstrap secondary */
+
+        /* Estilos específicos para o select de status no modal */
+        #updateStatusForm .form-select {
+            background-color: var(--magebus-light-bg);
+            border-color: #ced4da;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-magebus">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Mage-Bus Motorista</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">Meu Ônibus</a>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-outline-light ms-2" id="logoutBtn">Sair</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="mb-4">Painel do Motorista</h1>
+
+        <div id="message" class="alert d-none" role="alert"></div>
+
+        <div class="bus-info-card">
+            <h2 class="text-center">Informações do Meu Ônibus</h2>
+            <div id="busDetails">
+                <p class="text-center">Carregando informações do ônibus...</p>
+                <div class="text-center mt-3">
+                    <div class="spinner-border text-dark" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal" id="updateStatusBtn" disabled>Atualizar Status</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateStatusModalLabel">Atualizar Status do Ônibus</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="updateStatusForm">
+                        <div class="mb-3">
+                            <label for="newStatus" class="form-label">Novo Status</label>
+                            <select class="form-select" id="newStatus" required>
+                                <option value="emOperacao">Em Operação</option>
+                                <option value="parado">Parado</option>
+                                <option value="emManutencao">Em Manutenção</option>
+                                <option value="indisponivel">Indisponível</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Salvar Status</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/common.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 1. Verificação de Acesso (apenas motorista ou admin pode ver esta página)
+            const userRole = magebus.getUserRole();
+            if (!userRole || (userRole !== 'motorista' && userRole !== 'admin')) {
+                alert('Acesso negado. Apenas motoristas e administradores podem acessar esta página.');
+                magebus.clearAuthData();
+                window.location.href = '/frontend/src/pages/auth/login.html';
+                return;
+            }
+
+            // Referências aos elementos DOM
+            const busDetailsDiv = document.getElementById('busDetails');
+            const messageDiv = document.getElementById('message');
+            const updateStatusBtn = document.getElementById('updateStatusBtn');
+            const updateStatusModal = new bootstrap.Modal(document.getElementById('updateStatusModal'));
+            const updateStatusForm = document.getElementById('updateStatusForm');
+            const newStatusSelect = document.getElementById('newStatus');
+
+            let currentBusId = null; // Para armazenar o ID do ônibus carregado
+
+            // Função para exibir mensagens
+            function showMessage(msg, type = 'success') {
+                messageDiv.classList.remove('d-none', 'alert-success', 'alert-danger');
+                messageDiv.classList.add(`alert-${type}`);
+                messageDiv.textContent = msg;
+                setTimeout(() => {
+                    messageDiv.classList.add('d-none');
+                }, 3000);
+            }
+
+            // 2. Função para carregar os dados do ônibus do motorista logado
+            async function loadMyOnibus() {
+                busDetailsDiv.innerHTML = `
+                    <p class="text-center">Carregando informações do ônibus...</p>
+                    <div class="text-center mt-3">
+                        <div class="spinner-border text-dark" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>
+                `;
+                updateStatusBtn.setAttribute('disabled', 'true'); // Desabilita o botão enquanto carrega
+
+                try {
+                    const token = magebus.getAuthToken();
+                    const response = await fetch(`${magebus.API_BASE_URL}/onibus/meu`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        const bus = data.data;
+                        currentBusId = bus._id; // Salva o ID do ônibus
+                        busDetailsDiv.innerHTML = `
+                            <p><strong>Placa:</strong> ${bus.placa}</p>
+                            <p><strong>Linha:</strong> ${bus.linha}</p>
+                            <p><strong>Capacidade:</strong> ${bus.capacidade} passageiros</p>
+                            <p><strong>Status:</strong> <span class="status-badge status-${bus.status}">${bus.status.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</span></p>
+                            <p><strong>Motorista:</strong> ${bus.motorista ? bus.motorista.nome + ' (' + bus.motorista.email + ')' : 'Não atribuído'}</p>
+                            <p class="text-muted small">Última atualização: ${new Date(bus.createdAt).toLocaleString()}</p>
+                        `;
+                        updateStatusBtn.removeAttribute('disabled'); // Habilita o botão
+                        newStatusSelect.value = bus.status; // Define o status atual no modal
+                    } else {
+                        busDetailsDiv.innerHTML = `<p class="text-center text-danger">${data.message || 'Nenhum ônibus atribuído a você ou erro ao carregar.'}</p>`;
+                        showMessage(data.message || 'Falha ao carregar informações do ônibus.', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar meu ônibus:', error);
+                    busDetailsDiv.innerHTML = `<p class="text-center text-danger">Erro de conexão ao carregar informações do ônibus.</p>`;
+                    showMessage('Erro de conexão ao carregar ônibus.', 'danger');
+                }
+            }
+
+            // 3. Lógica para Atualizar o Status do Ônibus
+            updateStatusForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const newStatus = newStatusSelect.value;
+
+                try {
+                    const token = magebus.getAuthToken();
+                    const response = await fetch(`${magebus.API_BASE_URL}/onibus/meu/status`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ status: newStatus }),
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showMessage('Status do ônibus atualizado com sucesso!');
+                        updateStatusModal.hide(); // Fecha o modal
+                        loadMyOnibus(); // Recarrega os dados do ônibus para refletir a mudança
+                    } else {
+                        showMessage(data.message || 'Falha ao atualizar o status do ônibus.', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Erro ao atualizar status do ônibus:', error);
+                    showMessage('Erro de conexão ao atualizar status do ônibus.', 'danger');
+                }
+            });
+
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                magebus.clearAuthData();
+                window.location.href = '/frontend/src/pages/auth/login.html';
+            });
+
+            // Carrega os dados do ônibus quando a página é carregada
+            loadMyOnibus();
+        });
+    </script>
+</body>
+</html>
