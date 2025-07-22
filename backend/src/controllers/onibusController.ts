@@ -1,8 +1,7 @@
 // backend/src/controllers/onibusController.ts
 import { Request, Response, NextFunction } from 'express';
 import Onibus from '../models/Onibus';
-import Usuario from '../models/Usuario'; // Importar o modelo Usuario para popular
-import { CustomRequest } from '../middlewares/authMiddleware'; // Importar CustomRequest
+import Usuario from '../models/Usuario';
 import { subscribe } from 'diagnostics_channel';
 
 // @desc    Obter todos os ônibus
@@ -84,102 +83,70 @@ export const deleteOnibus = async (req: Request, res: Response, next: NextFuncti
 };
 
 
-// @desc    Obter o ônibus associado ao motorista logado
+// @desc    Obter o ônibus do motorista logado
 // @route   GET /api/v1/onibus/meu
-// @access  Private (Motorista)
-export const getMyOnibus = async (req: CustomRequest, res: Response, next: NextFunction) => {
+// @access  Private (motorista, admin)
+export const getMyOnibus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // --- NOVA VERIFICAÇÃO DE ROLE AQUI ---
-        if (!req.user || req.user.role !== 'motorista') {
-            return res.status(403).json({ success: false, message: 'Apenas motoristas podem acessar seu próprio ônibus.' });
-        }
-        // --- FIM DA NOVA VERIFICAÇÃO ---
-
-        const onibus = await Onibus.findOne({ motorista: req.user.id }).populate({ // Use req.user.id diretamente aqui
-            path: 'motorista',
-            select: 'nome email'
-        });
+        // CORRIGIDO: usa req.user.id
+        const onibus = await Onibus.findOne({ motorista: req.user.id }).populate('motorista', 'nome email');
 
         if (!onibus) {
-            return res.status(404).json({ success: false, message: 'Nenhum ônibus atribuído a este motorista.' });
+            return res.status(404).json({ success: false, message: 'Nenhum ônibus atribuído a você.' });
         }
 
         res.status(200).json({ success: true, data: onibus });
     } catch (error: any) {
-        console.error('Erro em getMyOnibus:', error); // Adicione um log de erro mais específico
-        res.status(500).json({ success: false, message: error.message || 'Erro ao carregar informações do ônibus.' });
+        console.error('Erro em getMeuOnibus:', error);
+        res.status(500).json({ success: false, message: error.message || 'Erro ao buscar seu ônibus.' });
     }
 };
 
 // @desc    Atualizar o status do ônibus do motorista logado
 // @route   PUT /api/v1/onibus/meu/status
-// @access  Private (Motorista)
-export const updateMyOnibusStatus = async (req: CustomRequest, res: Response, next: NextFunction) => {
+// @access  Private (motorista)
+export const updateMyOnibusStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // --- NOVA VERIFICAÇÃO DE ROLE AQUI ---
-        if (!req.user || req.user.role !== 'motorista') {
-            return res.status(403).json({ success: false, message: 'Apenas motoristas podem atualizar o status do seu ônibus.' });
-        }
-        // --- FIM DA NOVA VERIFICAÇÃO ---
-
         const { status } = req.body;
-
-        if (!status || !['emOperacao', 'parado', 'emManutencao', 'indisponivel'].includes(status)) {
-            return res.status(400).json({ success: false, message: 'Status inválido fornecido.' });
-        }
-
+        // CORRIGIDO: usa req.user.id
         const onibus = await Onibus.findOneAndUpdate(
-            { motorista: req.user.id }, // Use req.user.id diretamente aqui
+            { motorista: req.user.id },
             { status },
             { new: true, runValidators: true }
-        ).populate({
-            path: 'motorista',
-            select: 'nome email'
-        });
+        );
 
         if (!onibus) {
-            return res.status(404).json({ success: false, message: 'Nenhum ônibus atribuído a este motorista para atualizar o status.' });
+            return res.status(404).json({ success: false, message: 'Nenhum ônibus atribuído a você.' });
         }
 
         res.status(200).json({ success: true, data: onibus });
     } catch (error: any) {
-        console.error('Erro em updateMyOnibusStatus:', error); // Adicione um log de erro mais específico
-        res.status(500).json({ success: false, message: error.message || 'Erro ao atualizar status do ônibus.' });
+        console.error('Erro em updateMeuOnibusStatus:', error);
+        res.status(400).json({ success: false, message: error.message || 'Erro ao atualizar o status.' });
     }
 };
 
 // @desc    Atualizar a localização do ônibus do motorista logado
 // @route   PUT /api/v1/onibus/meu/localizacao
-// @acess   Private (Motorista)
-export const updateMyOnibusLocation = async (req: CustomRequest, res: Response, next: NextFunction) => {
+// @access  Private (motorista)
+export const updateMyOnibusLocation = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        if (!req.user || req.user.role !== 'motorista') {
-            return res.status(403).json({ sucess: false, message: 'Apenas motoristas podem atualizar a localização do seu ônibus.' });
-        }
-
         const { latitude, longitude } = req.body;
-
-        if (latitude === undefined || longitude === undefined) {
-            return res.status(400).json({ sucess: false, message: 'Latitude e longitude são obrigatórias.' });
-        }
-
+        // CORRIGIDO: usa req.user.id
         const onibus = await Onibus.findOneAndUpdate(
             { motorista: req.user.id },
-            { latitude, longitude },
+            { latitude, longitude, ultimaLocalizacao: new Date() }, // Adicionamos o campo de última localização
             { new: true, runValidators: true }
-        ).populate({
-            path: 'motorista',
-            select: 'nome email'
-        });
+        );
 
         if (!onibus) {
-            return res.status(404).json({ sucess: false, message: 'Nenhum ônibus atribuído a este motorista.' });
+            return res.status(404).json({ success: false, message: 'Nenhum ônibus atribuído a você.' });
         }
 
         res.status(200).json({ success: true, data: onibus });
     } catch (error: any) {
-        console.error('Erro em updateMyOnibusLocation:', error);
-        res.status(500).json({ success: false, message: error.message || 'Erro ao atualizar a localização do ônibus.' });
+        console.error('Erro em updateMeuOnibusLocalizacao:', error);
+        res.status(400).json({ success: false, message: error.message || 'Erro ao atualizar a localização.' });
     }
 };
 

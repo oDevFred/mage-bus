@@ -19,15 +19,15 @@ const router = express.Router();
 
 // Rota para o motorista obter seu próprio ônibus
 router.route('/meu')
-    .get(protect, getMyOnibus);
+    .get(protect, authorize('motorista', 'admin'), getMyOnibus);
 
 // Rota para o motorista atualizar o status de seu próprio ônibus
 router.route('/meu/status')
-    .put(protect, updateMyOnibusStatus);
+    .put(protect, authorize('motorista'), updateMyOnibusStatus);
 
 // Rota para o motorista atualizar a localização
 router.route('/meu/localizacao')
-    .put(protect, updateMyOnibusLocation);
+    .put(protect, authorize('motorista'), updateMyOnibusLocation);
 
 // Rota para obter a localização de todos os ônibus (acesso público)
 router.route('/localizacao')

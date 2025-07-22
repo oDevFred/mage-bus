@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mage-Bus - Central de Controle</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <style>
+        body {
+            background-color: var(--magebus-light-bg);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+        }
+        #map {
+            flex-grow: 1; /* Faz o mapa ocupar todo o espaço restante */
+            width: 100%;
+            height: 100%;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-magebus">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Mage-Bus Central de Controle</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">Mapa</a>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-outline-light ms-2" id="logoutBtn">Sair</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="../../assets/js/common.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // VERIFICAÇÃO DE ACESSO: Apenas central de controle e admin podem acessar
+            const userRole = magebus.getUserRole();
+            if (!userRole || (userRole !== 'centralControle' && userRole !== 'admin')) {
+                alert('Acesso negado. Apenas usuários da central de controle ou administradores podem acessar esta página.');
+                magebus.clearAuthData();
+                window.location.href = '/frontend/src/pages/auth/login.html';
+                return;
+            }
+
+            const API_BASE_URL = 'http://localhost:3000/api/v1';
+            let map;
+            const busMarkers = {};
+
+            // Inicializa o mapa do Leaflet
+            function initMap() {
+                const magebusLocation = { lat: -22.6568, lng: -43.0427 };
+                map = L.map('map').setView([magebusLocation.lat, magebusLocation.lng], 12);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+
+                fetchBusLocations();
+                setInterval(fetchBusLocations, 10000);
+            }
+
+            // Função para buscar a localização dos ônibus e renderizar no mapa
+            async function fetchBusLocations() {
+                try {
+                    const token = magebus.getAuthToken();
+                    // A rota é pública, mas enviamos o token por precaução em caso de futuras alterações
+                    const response = await fetch(`${API_BASE_URL}/onibus/localizacao`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        updateMarkers(data.data);
+                    } else {
+                        console.error('Erro ao buscar localização dos ônibus:', data.message || 'Erro desconhecido do servidor.');
+                    }
+                } catch (error) {
+                    console.error('Erro de conexão:', error);
+                }
+            }
+
+            // Função para atualizar os marcadores no mapa
+            function updateMarkers(busLocations) {
+                const existingPlacas = new Set(busLocations.map(bus => bus.placa));
+
+                for (const placa in busMarkers) {
+                    if (!existingPlacas.has(placa)) {
+                        map.removeLayer(busMarkers[placa]);
+                        delete busMarkers[placa];
+                    }
+                }
+
+                busLocations.forEach(bus => {
+                    const position = [bus.latitude, bus.longitude];
+                    if (busMarkers[bus.placa]) {
+                        busMarkers[bus.placa].setLatLng(position);
+                    } else {
+                        busMarkers[bus.placa] = L.marker(position).addTo(map)
+                            .bindPopup(`<b>Ônibus:</b> ${bus.placa}`);
+                    }
+                });
+            }
+
+            // Lógica de Logout
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                magebus.clearAuthData();
+                window.location.href = '/frontend/src/pages/auth/login.html';
+            });
+
+            // Inicializa o mapa
+            initMap();
+        });
+    </script>
+</body>
+</html>

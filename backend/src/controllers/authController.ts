@@ -3,7 +3,6 @@ import { Request, Response, NextFunction } from 'express';
 import Usuario from '../models/Usuario';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { CustomRequest } from '../middlewares/authMiddleware';
 
 // @desc    Registrar um novo usuário
 // @route   POST /api/v1/auth/register
@@ -61,12 +60,11 @@ export const login = async (req: Request, res: Response) => {
 // @desc    Obter usuário logado (para teste de rota protegida)
 // @route   GET /api/v1/auth/me
 // @access  Private
-export const getMe = async (req: CustomRequest, res: Response, next: NextFunction) => {
+export const getMe = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // TypeScript agora saberá que req.user existe aqui
-        const userFound = await Usuario.findById(req.user?.id); // req.user agora tem um tipo conhecido
+        const userFound = await Usuario.findById(req.user.id);
         if (!userFound) {
-        return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+            return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
         }
         res.status(200).json({ success: true, data: userFound });
     } catch (error: any) {

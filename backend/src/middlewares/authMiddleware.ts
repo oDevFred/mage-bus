@@ -1,19 +1,6 @@
-console.log('>>> authMiddleware.ts: Arquivo carregado! Versão: ' + new Date().toISOString()); // Adicione esta linha
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import Usuario, { IUsuario } from '../models/Usuario'; // Supondo que você tem uma interface para o usuário no seu modelo
-
-// Interface para o payload do JWT (o que será adicionado a req.user)
-export interface UserPayload {
-    id: string;
-    role: string;
-    // Adicione outras propriedades do usuário que você queira acessar diretamente via req.user
-}
-
-// Interface CustomRequest para estender o Request do Express
-export interface CustomRequest extends Request {
-    user?: UserPayload; // A propriedade 'user' agora é opcional aqui
-}
 
 // Middleware de proteção de rotas
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
@@ -36,16 +23,11 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
             return res.status(401).json({ success: false, message: 'Token inválido. Usuário não encontrado.' });
         }
 
-        if (user && user._id) {
-            // Explicitamente faz o cast de 'req' para um tipo que inclui 'user'
-            // O tipo Request & { user: UserPayload } funciona para adicionar a propriedade
-            (req as Request & { user: UserPayload }).user = {
-                id: user._id.toString(),
-                role: user.role
-            };
-        } else {
-            return res.status(500).json({ success: false, message: 'Erro interno: ID do usuário não encontrado após busca.' });
-        }
+        // TypeScript agora sabe que a propriedade 'user' existe
+        req.user = {
+            id: user.id.toString(),
+            role: user.role
+        };
 
         next();
     } catch (error: any) {
@@ -56,11 +38,10 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
 
 // Middleware de autorização por role (mantido para outras rotas, mas não usado para /meu agora)
 export const authorize = (...roles: string[]) => {
-    return (req: CustomRequest, res: Response, next: NextFunction) => {
-
-        if (!req.user || !roles.includes(req.user.role)) { // Descomente estas linhas
-            return res.status(403).json({ success: false, message: `O usuário com role ${req.user ? req.user.role : 'desconhecida'} não tem permissão para acessar esta rota.` }); // Descomente
+    return (req: Request, res: Response, next: NextFunction) => {
+        if (!req.user || !roles.includes(req.user.role)) {
+            return res.status(403).json({ success: false, message: `O usuário com role ${req.user ? req.user.role : 'desconhecida'} não tem permissão para acessar esta rota.` });
         }
-        next(); // Descomente
+        next();
     };
 };

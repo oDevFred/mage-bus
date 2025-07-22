@@ -1,24 +1,20 @@
 // backend/tsconfig.json
 {
-  "compilerOptions": {
-    "target": "es2020",
-    "module": "commonjs",
-    "lib": ["es2020"],
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "typeRoots": [ // <--- VERIFIQUE/ADICIONE ESTA LINHA
-      "./node_modules/@types",
-    ],
-    "types": []
-  },
-  "include": [
-    "src/**/*.ts",
-  ],
-  "exclude": [
-    "node_modules",
-  ]
+    "compilerOptions": {
+        "target": "es2016",
+        "module": "commonjs",
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "typeRoots": [
+            "./src/types",
+            "./node_modules/@types"
+        ]
+    },
+    "include": [
+        "src/**/*"
+    ]
 }
