@@ -182,3 +182,21 @@ export const updateMyOnibusLocation = async (req: CustomRequest, res: Response, 
         res.status(500).json({ success: false, message: error.message || 'Erro ao atualizar a localização do ônibus.' });
     }
 };
+
+// @desc    Obter a localização de todos os ônibus
+// @route   GET /api/v1/onibus/localizacao
+// @access  Public
+export const getAllOnibusLocations = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const onibus = await Onibus.find({
+            status: 'emOperacao',
+            latitude: { $ne: null },
+            longitude: { $ne: null }
+        }).select('placa latitude longitude');
+
+        res.status(200).json({ success: true, count: onibus.length, data: onibus });
+    } catch (error: any) {
+        console.error('Err em getAllOnibusLocations:', error);
+        res.status(500).json({ success: false, message: error.message || 'Erro ao buscar localização do ônibus'});
+    }
+};

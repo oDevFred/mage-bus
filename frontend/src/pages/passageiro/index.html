@@ -5,52 +5,103 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mage-Bus - Passageiro</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <style>
         body {
-            padding-top: 56px; /* Ajuste para a navbar fixa */
+            background-color: var(--magebus-light-bg);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+        }
+        #map {
+            flex-grow: 1; /* Faz o mapa ocupar todo o espaço restante */
+            width: 100%;
+            height: 100%;
+        }
+        .navbar-brand {
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-magebus">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">Mage-Bus</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="#">Mapa</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Minhas Rotas</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Alertas</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Login/Sair</a>
-                    </li>
-                </ul>
-            </div>
+            <a class="navbar-brand" href="#">Mage-Bus Passageiro</a>
+            <button class="btn btn-outline-light ms-auto" id="refreshMapBtn">Atualizar Mapa</button>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <div class="alert alert-info" role="alert">
-            Olá, Passageiro! Bem-vindo ao seu painel. Em breve, você verá ônibus em tempo real aqui.
-        </div>
-        <h2>Ônibus em Tempo Real (Em Construção)</h2>
-        <p>Aqui você poderá ver a localização dos ônibus no mapa, previsão de chegada e alertas.</p>
-        <div class="card">
-            <div class="card-body text-center">
-                <img src="https://via.placeholder.com/400x300?text=Mapa+do+Mage-Bus" alt="Mapa" class="img-fluid">
-                <p class="mt-3">Aguarde, o mapa com a localização dos ônibus será carregado aqui.</p>
-            </div>
-        </div>
-    </div>
+    <div id="map"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        const API_BASE_URL = 'http://localhost:3000/api/v1';
+
+        // Inicializa o mapa do Leaflet
+        const map = L.map('map').setView([-22.6568, -43.0427], 12); // Centro em Magé, RJ, com zoom 12
+
+        // Adiciona a camada de tiles do OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Objeto para armazenar os marcadores dos ônibus
+        const busMarkers = {};
+
+        // Função para buscar a localização dos ônibus e renderizar no mapa
+        async function fetchBusLocations() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/onibus/localizacao`);
+                const data = await response.json();
+
+                if (data.success) {
+                    updateMarkers(data.data);
+                } else {
+                    console.error('Erro ao buscar localização dos ônibus:', data.message);
+                }
+            } catch (error) {
+                console.error('Erro de conexão:', error);
+            }
+        }
+
+        // Função para atualizar os marcadores no mapa
+        function updateMarkers(busLocations) {
+            console.log('Dados de ônibus recebidos:', busLocations)
+            const existingPlacas = new Set(busLocations.map(bus => bus.placa));
+
+            // Remove marcadores de ônibus que não estão mais na lista
+            for (const placa in busMarkers) {
+                if (!existingPlacas.has(placa)) {
+                    map.removeLayer(busMarkers[placa]); // Remove o marcador do mapa
+                    delete busMarkers[placa]; // Remove da lista de marcadores
+                }
+            }
+
+            // Adiciona ou atualiza os marcadores dos ônibus na lista
+            busLocations.forEach(bus => {
+                const position = [bus.latitude, bus.longitude];
+                
+                if (busMarkers[bus.placa]) {
+                    // Se o marcador já existe, apenas atualiza a posição
+                    busMarkers[bus.placa].setLatLng(position);
+                } else {
+                    // Se não existe, cria um novo marcador
+                    busMarkers[bus.placa] = L.marker(position).addTo(map)
+                        .bindPopup(`<b>Ônibus:</b> ${bus.placa}`); // Adiciona um popup
+                }
+            });
+        }
+        
+        // Adiciona um listener para o botão de atualizar
+        document.getElementById('refreshMapBtn').addEventListener('click', fetchBusLocations);
+
+        // Traz a localização dos ônibus imediatamente e depois a cada 10 segundos
+        fetchBusLocations();
+        setInterval(fetchBusLocations, 10000);
+    </script>
 </body>
 </html>

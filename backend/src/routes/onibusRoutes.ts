@@ -8,7 +8,8 @@ import {
     deleteOnibus,
     getMyOnibus,
     updateMyOnibusStatus,
-    updateMyOnibusLocation
+    updateMyOnibusLocation,
+    getAllOnibusLocations
 } from '../controllers/onibusController';
 import { protect, authorize } from '../middlewares/authMiddleware';
 
@@ -27,6 +28,10 @@ router.route('/meu/status')
 // Rota para o motorista atualizar a localização
 router.route('/meu/localizacao')
     .put(protect, updateMyOnibusLocation);
+
+// Rota para obter a localização de todos os ônibus (acesso público)
+router.route('/localizacao')
+    .get(getAllOnibusLocations);
 
 // Rotas para Admin/Central de Controle (gerais, depois das específicas)
 router.route('/')
