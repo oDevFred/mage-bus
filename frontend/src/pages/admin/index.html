@@ -8,19 +8,19 @@
     <link rel="stylesheet" href="../../assets/css/style.css">
     <style>
         body {
-            background-color: var(--magebus-light-bg); /* Usando variável CSS */
+            background-color: var(--magebus-light-bg);
         }
         .container {
             margin-top: 30px;
         }
-        .dashboard-card h1 { /* Para consistência, caso haja um título aqui */
+        .dashboard-card h1 {
             color: var(--magebus-primary-dark);
         }
-        /* Os estilos da tabela e botões já serão afetados pelo style.css global */
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-magebus"> <div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-magebus">
+        <div class="container-fluid">
             <a class="navbar-brand" href="#">Mage-Bus Admin</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -101,7 +101,7 @@
                             <label for="motoristaSelect" class="form-label">Motorista</label>
                             <select class="form-select" id="motoristaSelect">
                                 <option value="">Nenhum Motorista</option>
-                                </select>
+                            </select>
                             <small class="form-text text-muted">Selecione um motorista para este ônibus.</small>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Salvar Ônibus</button>
@@ -137,9 +137,9 @@
                             <select class="form-select" id="userRole" required>
                                 <option value="" disabled selected>Selecione o perfil</option>
                                 <option value="motorista">Motorista</option>
-                                <option value="centralControle">Central de Controle</option>
+                                <option value="central_de_controle">Central de Controle</option>
                                 <option value="admin">Administrador</option>
-                                </select>
+                            </select>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Criar Usuário</button>
                     </form>
@@ -157,7 +157,7 @@
             if (!userRole || userRole !== 'admin') {
                 alert('Acesso negado. Apenas administradores podem acessar esta página.');
                 magebus.clearAuthData();
-                window.location.href = '/frontend/src/pages/auth/login.html'; // Corrigido o path
+                window.location.href = '../auth/login.html'; // CORRIGIDO
                 return;
             }
 
@@ -171,10 +171,9 @@
             const motoristaSelect = document.getElementById('motoristaSelect');
             const messageDiv = document.getElementById('message');
             const onibusModal = new bootstrap.Modal(document.getElementById('onibusModal'));
-            const userModal = new bootstrap.Modal(document.getElementById('userModal')); // Instanciar o novo modal
-            const userForm = document.getElementById('userForm'); // Referência ao formulário de usuário
+            const userModal = new bootstrap.Modal(document.getElementById('userModal'));
+            const userForm = document.getElementById('userForm');
 
-            // Nova função para carregar motoristas
             async function loadMotoristas() {
                 motoristaSelect.innerHTML = '<option value="">Carregando Motoristas...</option>';
                 try {
@@ -189,7 +188,7 @@
                     const data = await response.json();
 
                     if (response.ok) {
-                        motoristaSelect.innerHTML = '<option value="">Nenhum Motorista</option>'; // Opção padrão
+                        motoristaSelect.innerHTML = '<option value="">Nenhum Motorista</option>';
                         if (data.data.length > 0) {
                             data.data.forEach(motorista => {
                                 const option = document.createElement('option');
@@ -209,12 +208,10 @@
                 }
             }
 
-            // Chame loadMotoristas ao carregar a página e quando o modal de ônibus for aberto
-            loadMotoristas(); // Carrega na inicialização da página
+            loadMotoristas();
 
-            // Event listener para quando o modal do ônibus é aberto
             onibusModal._element.addEventListener('show.bs.modal', () => {
-                loadMotoristas(); // Recarrega os motoristas cada vez que o modal abre para garantir a lista mais recente
+                loadMotoristas();
             });
 
             function showMessage(msg, type = 'success') {
@@ -240,7 +237,7 @@
                     const data = await response.json();
 
                     if (response.ok) {
-                        onibusTableBody.innerHTML = ''; // Limpa antes de preencher
+                        onibusTableBody.innerHTML = '';
                         if (data.data.length === 0) {
                             onibusTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum ônibus cadastrado.</td></tr>';
                         } else {
@@ -251,7 +248,8 @@
                                     <td>${bus.linha}</td>
                                     <td>${bus.capacidade}</td>
                                     <td>${bus.status}</td>
-                                    <td>${bus.motorista ? bus.motorista.nome + ' (' + bus.motorista.email + ')' : 'Nenhum'}</td> <td>
+                                    <td>${bus.motorista ? bus.motorista.nome + ' (' + bus.motorista.email + ')' : 'Nenhum'}</td>
+                                    <td>
                                         <button class="btn btn-sm btn-info edit-btn" data-id="${bus._id}">Editar</button>
                                         <button class="btn btn-sm btn-danger delete-btn" data-id="${bus._id}">Excluir</button>
                                     </td>
@@ -285,7 +283,6 @@
                                 linhaInput.value = bus.linha;
                                 capacidadeInput.value = bus.capacidade;
                                 statusSelect.value = bus.status;
-                                // NOVO: Define o valor do select de motorista
                                 motoristaSelect.value = bus.motorista ? bus.motorista._id : '';
                                 onibusModal.show();
                                 document.getElementById('onibusModalLabel').textContent = 'Editar Ônibus';
@@ -341,12 +338,10 @@
                     capacidade: parseInt(capacidadeInput.value),
                     status: statusSelect.value,
                 };
-                // NOVO: Pega o valor do select, não do input de texto
                 const selectedMotoristaId = motoristaSelect.value;
                 if (selectedMotoristaId) {
                     onibusData.motorista = selectedMotoristaId;
                 } else {
-                    // Se "Nenhum Motorista" for selecionado ou o campo estiver vazio, envia null
                     onibusData.motorista = null;
                 }
 
@@ -380,14 +375,13 @@
             document.getElementById('addBusBtn').addEventListener('click', () => {
                 onibusForm.reset();
                 onibusIdInput.value = '';
-                motoristaSelect.value = ''; // Limpa a seleção do motorista
+                motoristaSelect.value = '';
                 document.getElementById('onibusModalLabel').textContent = 'Adicionar Novo Ônibus';
-                loadMotoristas(); // Garante que a lista de motoristas esteja atualizada ao abrir para adicionar
+                loadMotoristas();
             });
 
-            // *** NOVO CÓDIGO PARA ADICIONAR USUÁRIO PELO ADMIN ***
             document.getElementById('addUserBtn').addEventListener('click', () => {
-                userForm.reset(); // Limpa o formulário do usuário
+                userForm.reset();
                 document.getElementById('userModalLabel').textContent = 'Adicionar Novo Usuário';
             });
 
@@ -397,15 +391,15 @@
                 const name = document.getElementById('userName').value;
                 const email = document.getElementById('userEmail').value;
                 const password = document.getElementById('userPassword').value;
-                const role = document.getElementById('userRole').value; // A role agora é selecionada
+                const role = document.getElementById('userRole').value;
 
                 try {
                     const token = magebus.getAuthToken();
-                    const response = await fetch(`${magebus.API_BASE_URL}/auth/register`, { // Usa a rota de registro existente
+                    const response = await fetch(`${magebus.API_BASE_URL}/auth/register`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}` // Admin precisa de token para registrar outros
+                            'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({ nome: name, email, senha: password, role }),
                     });
@@ -414,9 +408,8 @@
 
                     if (response.ok) {
                         showMessage(`Usuário "${name}" (${role}) criado com sucesso!`);
-                        userModal.hide(); // Fecha o modal
-                        userForm.reset(); // Limpa o formulário
-                        // Opcional: Recarregar uma lista de usuários, se você criar uma
+                        userModal.hide();
+                        userForm.reset();
                     } else {
                         showMessage(data.message || `Falha ao criar usuário.`, 'danger');
                     }
@@ -427,10 +420,9 @@
             });
 
 
-            // Logout
             document.getElementById('logoutBtn').addEventListener('click', () => {
                 magebus.clearAuthData();
-                window.location.href = '/frontend/src/pages/auth/login.html'; // Corrigido o path de logout
+                window.location.href = '../auth/login.html'; // CORRIGIDO
             });
 
             loadOnibus();

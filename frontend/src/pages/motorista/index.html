@@ -30,12 +30,11 @@
             border-radius: .5rem;
             display: inline-block;
         }
-        .status-emOperacao { background-color: #28a745; color: white; } /* Bootstrap success */
-        .status-parado { background-color: #ffc107; color: var(--magebus-text-dark); } /* Bootstrap warning */
-        .status-emManutencao { background-color: #dc3545; color: white; } /* Bootstrap danger */
-        .status-indisponivel { background-color: #6c757d; color: white; } /* Bootstrap secondary */
+        .status-emOperacao { background-color: #28a745; color: white; }
+        .status-parado { background-color: #ffc107; color: var(--magebus-text-dark); }
+        .status-emManutencao { background-color: #dc3545; color: white; }
+        .status-indisponivel { background-color: #6c757d; color: white; }
 
-        /* Estilos específicos para o select de status no modal */
         #updateStatusForm .form-select {
             background-color: var(--magebus-light-bg);
             border-color: #ced4da;
@@ -114,11 +113,10 @@
             if (!userRole || (userRole !== 'motorista' && userRole !== 'admin')) {
                 alert('Acesso negado. Apenas motoristas e administradores podem acessar esta página.');
                 magebus.clearAuthData();
-                window.location.href = '/frontend/src/pages/auth/login.html';
+                window.location.href = '../auth/login.html'; // CORRIGIDO
                 return;
             }
 
-            // Referências aos elementos DOM
             const busDetailsDiv = document.getElementById('busDetails');
             const messageDiv = document.getElementById('message');
             const updateStatusBtn = document.getElementById('updateStatusBtn');
@@ -126,9 +124,8 @@
             const updateStatusForm = document.getElementById('updateStatusForm');
             const newStatusSelect = document.getElementById('newStatus');
 
-            let currentBusId = null; // Para armazenar o ID do ônibus carregado
+            let currentBusId = null;
 
-            // Função para exibir mensagens
             function showMessage(msg, type = 'success') {
                 messageDiv.classList.remove('d-none', 'alert-success', 'alert-danger');
                 messageDiv.classList.add(`alert-${type}`);
@@ -138,7 +135,6 @@
                 }, 3000);
             }
 
-            // 2. Função para carregar os dados do ônibus do motorista logado
             async function loadMyOnibus() {
                 busDetailsDiv.innerHTML = `
                     <p class="text-center">Carregando informações do ônibus...</p>
@@ -148,7 +144,7 @@
                         </div>
                     </div>
                 `;
-                updateStatusBtn.setAttribute('disabled', 'true'); // Desabilita o botão enquanto carrega
+                updateStatusBtn.setAttribute('disabled', 'true');
 
                 try {
                     const token = magebus.getAuthToken();
@@ -163,7 +159,7 @@
 
                     if (response.ok) {
                         const bus = data.data;
-                        currentBusId = bus._id; // Salva o ID do ônibus
+                        currentBusId = bus._id;
                         busDetailsDiv.innerHTML = `
                             <p><strong>Placa:</strong> ${bus.placa}</p>
                             <p><strong>Linha:</strong> ${bus.linha}</p>
@@ -172,8 +168,8 @@
                             <p><strong>Motorista:</strong> ${bus.motorista ? bus.motorista.nome + ' (' + bus.motorista.email + ')' : 'Não atribuído'}</p>
                             <p class="text-muted small">Última atualização: ${new Date(bus.createdAt).toLocaleString()}</p>
                         `;
-                        updateStatusBtn.removeAttribute('disabled'); // Habilita o botão
-                        newStatusSelect.value = bus.status; // Define o status atual no modal
+                        updateStatusBtn.removeAttribute('disabled');
+                        newStatusSelect.value = bus.status;
                     } else {
                         busDetailsDiv.innerHTML = `<p class="text-center text-danger">${data.message || 'Nenhum ônibus atribuído a você ou erro ao carregar.'}</p>`;
                         showMessage(data.message || 'Falha ao carregar informações do ônibus.', 'danger');
@@ -185,10 +181,8 @@
                 }
             }
 
-            // Referência ao novo elemento para o status da localização
             const statusLocalizacaoElement = document.getElementById('status-localizacao');
 
-            // Função para obter e enviar a localização
             const enviarLocalizacao = async () => {
                 if (!navigator.geolocation) {
                     if (statusLocalizacaoElement) {
@@ -251,7 +245,6 @@
                 }
             };
 
-            // 3. Lógica para Atualizar o Status do Ônibus
             updateStatusForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
 
@@ -271,8 +264,8 @@
 
                     if (response.ok) {
                         showMessage('Status do ônibus atualizado com sucesso!');
-                        updateStatusModal.hide(); // Fecha o modal
-                        loadMyOnibus(); // Recarrega os dados do ônibus para refletir a mudança
+                        updateStatusModal.hide();
+                        loadMyOnibus();
                     } else {
                         showMessage(data.message || 'Falha ao atualizar o status do ônibus.', 'danger');
                     }
@@ -282,25 +275,23 @@
                 }
             });
 
-            // Logout
             document.getElementById('logoutBtn').addEventListener('click', () => {
                 magebus.clearAuthData();
-                window.location.href = '/frontend/src/pages/auth/login.html';
+                window.location.href = '../auth/login.html'; // CORRIGIDO
             });
 
-            // Inicia o processo de geolocalização e envio de dados
-            if (userRole === 'motorista') { // Apenas motoristas precisam enviar a localização
+            if (userRole === 'motorista') {
                 if (navigator.geolocation) {
                     navigator.permissions.query({ name: 'geolocation' }).then(permissionStatus => {
                         if (permissionStatus.state === 'granted') {
-                            enviarLocalizacao(); // Envia a localização uma vez imediatamente
-                            setInterval(enviarLocalizacao, 10000); // Envia a cada 10 segundos
+                            enviarLocalizacao();
+                            setInterval(enviarLocalizacao, 10000);
                         } else if (permissionStatus.state === 'prompt') {
                             if (statusLocalizacaoElement) {
                                 statusLocalizacaoElement.textContent = 'Por favor, permita o acesso à sua localização para continuar.';
                                 statusLocalizacaoElement.style.color = 'orange';
                             }
-                            enviarLocalizacao(); // Tenta obter a localização, o que irá solicitar a permissão
+                            enviarLocalizacao();
                         } else if (permissionStatus.state === 'denied') {
                             if (statusLocalizacaoElement) {
                                 statusLocalizacaoElement.textContent = 'Permissão de localização negada. Habilite nas configurações do navegador.';
@@ -316,7 +307,6 @@
                 }
             }
 
-            // Carrega os dados do ônibus quando a página é carregada
             loadMyOnibus();
         });
     </script>

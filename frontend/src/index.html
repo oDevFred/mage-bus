@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <style>
         body {
-            background-color: var(--magebus-light-bg); /* Usando variável CSS */
+            background-color: var(--magebus-light-bg);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -16,7 +16,7 @@
             margin: 0;
             flex-direction: column;
         }
-        .dashboard-card { /* Classe renomeada de .main-content para .dashboard-card para consistência */
+        .dashboard-card {
             background-color: var(--magebus-white);
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -26,11 +26,11 @@
             width: 90%;
         }
         .dashboard-card h1 {
-            color: var(--magebus-primary-dark); /* Usando variável CSS */
+            color: var(--magebus-primary-dark);
             margin-bottom: 20px;
         }
         .dashboard-card p {
-            color: var(--magebus-secondary); /* Usando variável CSS */
+            color: var(--magebus-secondary);
             margin-bottom: 30px;
         }
         .loading-spinner {
@@ -42,7 +42,8 @@
     <div class="dashboard-card" id="mainContent">
         <h1>Bem-vindo ao Mage-Bus!</h1>
         <p>Aguarde, estamos verificando sua sessão...</p>
-        <div class="spinner-border text-dark loading-spinner" role="status"> <span class="visually-hidden">Carregando...</span>
+        <div class="spinner-border text-dark loading-spinner" role="status">
+            <span class="visually-hidden">Carregando...</span>
         </div>
     </div>
 
@@ -53,9 +54,16 @@
             const token = magebus.getAuthToken();
             const role = magebus.getUserRole();
 
-            setTimeout(() => {
-                window.location.href = 'pages/auth/login.html';
-            }, 1500);
+            // Lógica para verificar a sessão e redirecionar
+            if (token && role) {
+                // Se o usuário já estiver logado, redireciona para o dashboard correto
+                magebus.redirectToDashboard(role);
+            } else {
+                // Se não estiver logado, redireciona para a página de login após um pequeno atraso
+                setTimeout(() => {
+                    window.location.href = 'pages/auth/login.html';
+                }, 1500);
+            }
         });
     </script>
 </body>

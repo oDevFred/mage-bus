@@ -17,7 +17,7 @@
             margin: 0;
         }
         #map {
-            flex-grow: 1; /* Faz o mapa ocupar todo o espaço restante */
+            flex-grow: 1;
             width: 100%;
             height: 100%;
         }
@@ -30,7 +30,10 @@
     <nav class="navbar navbar-expand-lg navbar-magebus">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">Mage-Bus Passageiro</a>
-            <button class="btn btn-outline-light ms-auto" id="refreshMapBtn">Atualizar Mapa</button>
+            <div class="ms-auto">
+                <button class="btn btn-outline-light me-2" id="refreshMapBtn">Atualizar Mapa</button>
+                <button class="btn btn-warning" id="logoutBtn">Sair</button>
+            </div>
         </div>
     </nav>
 
@@ -38,70 +41,79 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="../../assets/js/common.js"></script>
     <script>
-        const API_BASE_URL = 'http://localhost:3000/api/v1';
+        document.addEventListener('DOMContentLoaded', () => {
+            const userRole = magebus.getUserRole();
+            const token = magebus.getAuthToken();
 
-        // Inicializa o mapa do Leaflet
-        const map = L.map('map').setView([-22.6568, -43.0427], 12); // Centro em Magé, RJ, com zoom 12
-
-        // Adiciona a camada de tiles do OpenStreetMap
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-        
-        // Objeto para armazenar os marcadores dos ônibus
-        const busMarkers = {};
-
-        // Função para buscar a localização dos ônibus e renderizar no mapa
-        async function fetchBusLocations() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/onibus/localizacao`);
-                const data = await response.json();
-
-                if (data.success) {
-                    updateMarkers(data.data);
-                } else {
-                    console.error('Erro ao buscar localização dos ônibus:', data.message);
+            if (token && userRole) {
+                if (userRole !== 'passageiro') {
+                    // Se estiver logado com outro perfil, redireciona para o dashboard correto
+                    magebus.redirectToDashboard(userRole);
+                    return;
                 }
-            } catch (error) {
-                console.error('Erro de conexão:', error);
+            } else {
+                // Se não houver token, redireciona para a página de login
+                window.location.href = '../auth/login.html';
+                return;
             }
-        }
 
-        // Função para atualizar os marcadores no mapa
-        function updateMarkers(busLocations) {
-            console.log('Dados de ônibus recebidos:', busLocations)
-            const existingPlacas = new Set(busLocations.map(bus => bus.placa));
+            const map = L.map('map').setView([-22.6568, -43.0427], 12);
 
-            // Remove marcadores de ônibus que não estão mais na lista
-            for (const placa in busMarkers) {
-                if (!existingPlacas.has(placa)) {
-                    map.removeLayer(busMarkers[placa]); // Remove o marcador do mapa
-                    delete busMarkers[placa]; // Remove da lista de marcadores
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            const busMarkers = {};
+
+            async function fetchBusLocations() {
+                try {
+                    const response = await fetch(`${magebus.API_BASE_URL}/onibus/localizacao`);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        updateMarkers(data.data);
+                    } else {
+                        console.error('Erro ao buscar localização dos ônibus:', data.message);
+                    }
+                } catch (error) {
+                    console.error('Erro de conexão:', error);
                 }
             }
 
-            // Adiciona ou atualiza os marcadores dos ônibus na lista
-            busLocations.forEach(bus => {
-                const position = [bus.latitude, bus.longitude];
-                
-                if (busMarkers[bus.placa]) {
-                    // Se o marcador já existe, apenas atualiza a posição
-                    busMarkers[bus.placa].setLatLng(position);
-                } else {
-                    // Se não existe, cria um novo marcador
-                    busMarkers[bus.placa] = L.marker(position).addTo(map)
-                        .bindPopup(`<b>Ônibus:</b> ${bus.placa}`); // Adiciona um popup
+            function updateMarkers(busLocations) {
+                const existingPlacas = new Set(busLocations.map(bus => bus.placa));
+
+                for (const placa in busMarkers) {
+                    if (!existingPlacas.has(placa)) {
+                        map.removeLayer(busMarkers[placa]);
+                        delete busMarkers[placa];
+                    }
                 }
+
+                busLocations.forEach(bus => {
+                    const position = [bus.latitude, bus.longitude];
+                    
+                    if (busMarkers[bus.placa]) {
+                        busMarkers[bus.placa].setLatLng(position);
+                    } else {
+                        busMarkers[bus.placa] = L.marker(position).addTo(map)
+                            .bindPopup(`<b>Ônibus:</b> ${bus.placa}`);
+                    }
+                });
+            }
+            
+            document.getElementById('refreshMapBtn').addEventListener('click', fetchBusLocations);
+            
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                magebus.clearAuthData();
+                window.location.href = '../auth/login.html';
             });
-        }
-        
-        // Adiciona um listener para o botão de atualizar
-        document.getElementById('refreshMapBtn').addEventListener('click', fetchBusLocations);
 
-        // Traz a localização dos ônibus imediatamente e depois a cada 10 segundos
-        fetchBusLocations();
-        setInterval(fetchBusLocations, 10000);
+            fetchBusLocations();
+            setInterval(fetchBusLocations, 10000);
+        });
     </script>
 </body>
 </html>

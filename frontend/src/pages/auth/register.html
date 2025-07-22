@@ -8,19 +8,19 @@
     <link rel="stylesheet" href="../../assets/css/style.css">
     <style>
         body {
-            background-color: var(--magebus-light-bg); /* Usando variável CSS */
+            background-color: var(--magebus-light-bg);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
         }
-        .auth-card { /* Usando classe genérica para cards de autenticação */
+        .auth-card {
             max-width: 500px;
             width: 90%;
         }
         .auth-card h2 {
-            color: var(--magebus-primary-dark); /* Usando variável CSS */
+            color: var(--magebus-primary-dark);
         }
     </style>
 </head>
@@ -57,7 +57,7 @@
             const password = document.getElementById('passwordInput').value;
             const messageDiv = document.getElementById('message');
 
-            const role = 'passageiro'; // *** ROLE PADRÃO FIXADA PARA PASSAGEIRO ***
+            const role = 'passageiro'; // A role padrão para novos registros é 'passageiro'.
 
             try {
                 const response = await fetch(`${magebus.API_BASE_URL}/auth/register`, {

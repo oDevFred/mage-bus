@@ -17,7 +17,7 @@
             margin: 0;
         }
         #map {
-            flex-grow: 1; /* Faz o mapa ocupar todo o espaço restante */
+            flex-grow: 1;
             width: 100%;
             height: 100%;
         }
@@ -57,11 +57,10 @@
             if (!userRole || (userRole !== 'centralControle' && userRole !== 'admin')) {
                 alert('Acesso negado. Apenas usuários da central de controle ou administradores podem acessar esta página.');
                 magebus.clearAuthData();
-                window.location.href = '/frontend/src/pages/auth/login.html';
+                window.location.href = '../auth/login.html'; // CORRIGIDO
                 return;
             }
 
-            const API_BASE_URL = 'http://localhost:3000/api/v1';
             let map;
             const busMarkers = {};
 
@@ -83,7 +82,7 @@
                 try {
                     const token = magebus.getAuthToken();
                     // A rota é pública, mas enviamos o token por precaução em caso de futuras alterações
-                    const response = await fetch(`${API_BASE_URL}/onibus/localizacao`, {
+                    const response = await fetch(`${magebus.API_BASE_URL}/onibus/localizacao`, { // CORRIGIDO
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
@@ -125,7 +124,7 @@
             // Lógica de Logout
             document.getElementById('logoutBtn').addEventListener('click', () => {
                 magebus.clearAuthData();
-                window.location.href = '/frontend/src/pages/auth/login.html';
+                window.location.href = '../auth/login.html'; // CORRIGIDO
             });
 
             // Inicializa o mapa
