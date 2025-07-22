@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
         body {
             background-color: var(--magebus-light-bg);
@@ -23,6 +24,12 @@
         }
         .navbar-brand {
             font-weight: bold;
+        }
+        /* Estilo para o ícone do ônibus */
+        .bus-icon {
+            font-size: 24px;
+            color: #ffc107; /* Cor alterada para amarelo */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
     </style>
 </head>
@@ -49,12 +56,10 @@
 
             if (token && userRole) {
                 if (userRole !== 'passageiro') {
-                    // Se estiver logado com outro perfil, redireciona para o dashboard correto
                     magebus.redirectToDashboard(userRole);
                     return;
                 }
             } else {
-                // Se não houver token, redireciona para a página de login
                 window.location.href = '../auth/login.html';
                 return;
             }
@@ -65,6 +70,13 @@
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
             
+            const busDivIcon = L.divIcon({
+                className: 'custom-bus-icon',
+                html: '<i class="bi bi-bus-front-fill bus-icon"></i>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 24]
+            });
+
             const busMarkers = {};
 
             async function fetchBusLocations() {
@@ -98,7 +110,7 @@
                     if (busMarkers[bus.placa]) {
                         busMarkers[bus.placa].setLatLng(position);
                     } else {
-                        busMarkers[bus.placa] = L.marker(position).addTo(map)
+                        busMarkers[bus.placa] = L.marker(position, { icon: busDivIcon }).addTo(map)
                             .bindPopup(`<b>Ônibus:</b> ${bus.placa}`);
                     }
                 });
