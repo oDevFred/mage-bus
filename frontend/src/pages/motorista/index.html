@@ -70,14 +70,10 @@
         <div class="bus-info-card">
             <h2 class="text-center">Informações do Meu Ônibus</h2>
             <div id="busDetails">
-                <p class="text-center">Carregando informações do ônibus...</p>
-                <div class="text-center mt-3">
-                    <div class="spinner-border text-dark" role="status">
-                        <span class="visually-hidden">Carregando...</span>
-                    </div>
                 </div>
-            </div>
 
+            <p id="status-localizacao" class="text-center mt-3"></p>
+            
             <div class="text-center mt-4">
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal" id="updateStatusBtn" disabled>Atualizar Status</button>
             </div>
@@ -189,6 +185,72 @@
                 }
             }
 
+            // Referência ao novo elemento para o status da localização
+            const statusLocalizacaoElement = document.getElementById('status-localizacao');
+
+            // Função para obter e enviar a localização
+            const enviarLocalizacao = async () => {
+                if (!navigator.geolocation) {
+                    if (statusLocalizacaoElement) {
+                        statusLocalizacaoElement.textContent = 'Geolocalização não é suportada por este navegador.';
+                        statusLocalizacaoElement.style.color = 'red';
+                    }
+                    return;
+                }
+
+                try {
+                    const position = await new Promise((resolve, reject) => {
+                        navigator.geolocation.getCurrentPosition(resolve, reject, {
+                            enableHighAccuracy: true,
+                            timeout: 5000,
+                            maximumAge: 0
+                        });
+                    });
+
+                    const { latitude, longitude } = position.coords;
+
+                    const token = magebus.getAuthToken();
+                    if (!token) {
+                        if (statusLocalizacaoElement) {
+                            statusLocalizacaoElement.textContent = 'Token de autenticação não encontrado. Faça login novamente.';
+                            statusLocalizacaoElement.style.color = 'red';
+                        }
+                        return;
+                    }
+
+                    const response = await fetch(`${magebus.API_BASE_URL}/onibus/meu/localizacao`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ latitude, longitude })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        console.log('Localização atualizada com sucesso:', data.data);
+                        if (statusLocalizacaoElement) {
+                            statusLocalizacaoElement.textContent = `Localização atualizada: Lat ${latitude.toFixed(4)}, Lon ${longitude.toFixed(4)}`;
+                            statusLocalizacaoElement.style.color = 'green';
+                        }
+                    } else {
+                        console.error('Erro ao atualizar localização:', data.message);
+                        if (statusLocalizacaoElement) {
+                            statusLocalizacaoElement.textContent = `Erro: ${data.message}`;
+                            statusLocalizacaoElement.style.color = 'red';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro ao obter a localização:', error);
+                    if (statusLocalizacaoElement) {
+                        statusLocalizacaoElement.textContent = `Erro ao obter a localização: ${error.message}`;
+                        statusLocalizacaoElement.style.color = 'red';
+                    }
+                }
+            };
+
             // 3. Lógica para Atualizar o Status do Ônibus
             updateStatusForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
@@ -225,6 +287,34 @@
                 magebus.clearAuthData();
                 window.location.href = '/frontend/src/pages/auth/login.html';
             });
+
+            // Inicia o processo de geolocalização e envio de dados
+            if (userRole === 'motorista') { // Apenas motoristas precisam enviar a localização
+                if (navigator.geolocation) {
+                    navigator.permissions.query({ name: 'geolocation' }).then(permissionStatus => {
+                        if (permissionStatus.state === 'granted') {
+                            enviarLocalizacao(); // Envia a localização uma vez imediatamente
+                            setInterval(enviarLocalizacao, 10000); // Envia a cada 10 segundos
+                        } else if (permissionStatus.state === 'prompt') {
+                            if (statusLocalizacaoElement) {
+                                statusLocalizacaoElement.textContent = 'Por favor, permita o acesso à sua localização para continuar.';
+                                statusLocalizacaoElement.style.color = 'orange';
+                            }
+                            enviarLocalizacao(); // Tenta obter a localização, o que irá solicitar a permissão
+                        } else if (permissionStatus.state === 'denied') {
+                            if (statusLocalizacaoElement) {
+                                statusLocalizacaoElement.textContent = 'Permissão de localização negada. Habilite nas configurações do navegador.';
+                                statusLocalizacaoElement.style.color = 'red';
+                            }
+                        }
+                    });
+                } else {
+                    if (statusLocalizacaoElement) {
+                        statusLocalizacaoElement.textContent = 'Geolocalização não é suportada por este navegador.';
+                        statusLocalizacaoElement.style.color = 'red';
+                    }
+                }
+            }
 
             // Carrega os dados do ônibus quando a página é carregada
             loadMyOnibus();

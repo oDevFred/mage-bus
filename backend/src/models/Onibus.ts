@@ -1,51 +1,46 @@
-import mongoose from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 
-const OnibusSchema = new mongoose.Schema({
+export interface IOnibus extends Document {
+    placa: string;
+    modelo: string;
+    status: 'emOperacao' | 'parado' | 'emManutencao' | 'indisponivel';
+    motorista: mongoose.Schema.Types.ObjectId;
+    latitude?: number;
+    longitude?: number;
+}
+
+const OnibusSchema: Schema = new Schema({
     placa: {
         type: String,
         required: [true, 'Por favor, adicione a placa do ônibus'],
         unique: true,
         trim: true,
-        uppercase: true,
+        maxlength: [10, 'A placa não pode ter mais de 10 caracteres']
     },
-    linha: {
+    modelo: {
         type: String,
-        required: [true, 'Por favor, adicione a linha do ônibus'],
-        trim: true,
-    },
-    capacidade: {
-        type: Number,
-        required: [true, 'Por favor, adicione a capacidade de passageiros'],
-        min: 1,
-    },
-    motorista: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Usuario', // Referencia o modelo de Usuário
-        default: null, // Pode não ter um motorista atribuído inicialmente
-    },
-    localizacaoAtual: {
-        type: {
-        type: String, // 'Point' para geolocalização no MongoDB
-        enum: ['Point'],
-        default: 'Point',
-        },
-        coordinates: {
-        type: [Number], // [longitude, latitude]
-        index: '2dsphere', // Para buscas geospaciais
-        default: [0, 0], // Posição padrão
-        },
+        required: [true, 'Por favor, adicione o modelo do ônibus']
     },
     status: {
         type: String,
         enum: ['emOperacao', 'parado', 'emManutencao', 'indisponivel'],
-        default: 'parado',
+        default: 'parado'
     },
-    createdAt: {
-        type: Date,
-        default: Date.now,
+    motorista: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Usuario',
+        required: [true, 'Por favor, adicione o motorista responsável']
     },
+    latitude: { // Adicionado
+        type: Number,
+        default: null
+    },
+    longitude: { // Adicionado
+        type: Number,
+        default: null
+    }
+}, {
+    timestamps: true
 });
 
-const Onibus = mongoose.model('Onibus', OnibusSchema, 'onibus');
-
-export default Onibus;
+export default mongoose.model<IOnibus>('Onibus', OnibusSchema, 'onibus');
