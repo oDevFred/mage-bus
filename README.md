@@ -1,6 +1,6 @@
 # 🚌 Mage-Bus - Sistema de Gerenciamento de Frotas de Ônibus
 
-Um sistema completo para gerenciamento de frotas de ônibus, incluindo módulos para administradores, central de controle e motoristas. O objetivo é otimizar a operação e a comunicação dentro de uma empresa de transporte.
+Um sistema completo para gerenciamento de frotas de ônibus, incluindo módulos para administradores, central de controle e motoristas. O objetivo é otimizar a operação, o monitoramento em tempo real e a comunicação dentro de uma empresa de transporte.
 
 ---
 
@@ -20,22 +20,27 @@ Um sistema completo para gerenciamento de frotas de ônibus, incluindo módulos 
 ### Frontend (Interface do Usuário)
 * **HTML5 / CSS3**: Estrutura e estilo.
 * **JavaScript (Vanilla JS)**: Lógica do lado do cliente.
-* **Bootstrap**: Framework para deixar mais bonito e responsivo.
+* **Bootstrap**: Framework para UI responsiva.
+* **Leaflet.js**: Biblioteca para mapas interativos.
+* **Bootstrap Icons**: Para iconografia.
 
 ---
 
 ## ✨ Funcionalidades
 
 * **Autenticação e Autorização**: Sistema robusto de login com JWT e controle de acesso baseado em perfis (Admin, Central de Controle, Motorista).
-* **Gerenciamento de Usuários**: CRUD (Criação, Leitura, Atualização, Exclusão) de usuários (principalmente por Admin).
-* **Gerenciamento de Ônibus**: CRUD completo de informações dos ônibus.
+* **Geolocalização em Tempo Real**: Rastreamento de ônibus com atualizações de localização enviadas pelos motoristas e visualizadas no painel da central de controle.
+* **Painel do Administrador**:
+    * Gerenciamento completo (CRUD) de ônibus.
+    * Gerenciamento de usuários (criação de motoristas, administradores, etc.).
+    * Atribuição de motoristas a ônibus específicos.
+* **Painel da Central de Controle**:
+    * Visualização em tempo real de toda a frota em um mapa interativo.
+    * Monitoramento do status e localização de cada ônibus.
 * **Painel do Motorista**:
     * Visualização do próprio ônibus atribuído.
-    * Atualização do status do ônibus em tempo real.
-* **Painel da Central de Controle**:
-    * Visualização de todos os ônibus e seus status.
-* **Painel do Administrador**:
-    * Controle total sobre usuários e ônibus.
+    * Atualização do status do ônibus (ex: Em Operação, Parado).
+    * Envio de coordenadas de geolocalização para o sistema.
 
 ---
 
