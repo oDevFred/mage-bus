@@ -18,7 +18,7 @@ services:
     environment:
       MONGODB_URI: mongodb://mongo:27017/magebus_db
       JWT_SECRET: seuSegredoJWTSuperSeguroAqui
-      JWT_EXPIRE: 1h
+      JWT_EXPIRES_IN: 1h
     volumes:
       - ./backend:/app
       # Adiciona um volume anônimo para node_modules para evitar sobrescrever

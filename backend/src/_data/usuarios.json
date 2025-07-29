@@ -1,0 +1,9 @@
+[
+    {
+        "_id": "60c72b2f9b1d8c001f8e4d4a",
+        "nome": "Admin Master",
+        "email": "admin@magebus.com",
+        "senha": "senha123",
+        "role": "admin"
+    }
+]

@@ -7,7 +7,9 @@
     "build": "tsc",
     "serve": "node src/app.js",
     "dev": "nodemon src/app.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "seeder:import": "ts-node src/utils/seeder.ts -i",
+    "seeder:destroy": "ts-node src/utils/seeder.ts -d"
   },
   "keywords": [],
   "author": "",
