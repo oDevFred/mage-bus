@@ -1,0 +1,36 @@
+services:
+  mongo:
+    image: mongo:latest
+    container_name: magebus-mongodb
+    ports:
+      - "27018:27017" # <-- Mapeia a porta 27018 do seu Mac para a 27017 do contêiner
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - magebus-network
+
+  backend:
+    build: ./backend
+    container_name: magebus-backend
+    command: npm run dev
+    ports:
+      - "3000:3000"
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/magebus_db
+      JWT_SECRET: seuSegredoJWTSuperSeguroAqui
+      JWT_EXPIRE: 1h
+    volumes:
+      - ./backend:/app
+      # Adiciona um volume anônimo para node_modules para evitar sobrescrever
+      - /app/node_modules
+    depends_on:
+      - mongo
+    networks:
+      - magebus-network
+
+networks:
+  magebus-network:
+    driver: bridge
+
+volumes:
+  mongo_data:

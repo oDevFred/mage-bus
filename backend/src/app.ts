@@ -31,7 +31,7 @@ app.use('/api/v1/onibus', onibusRoutes);
 
 // Rota de teste
 app.get('/', (req: Request, res: Response) => {
-    res.send('API Mage-Bus funcionando!');
+    res.send('Hot-reload funcionando 100%!');
 });
 
 // Iniciar o servidor

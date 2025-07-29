@@ -88,7 +88,12 @@ export const deleteOnibus = async (req: Request, res: Response, next: NextFuncti
 // @access  Private (motorista, admin)
 export const getMyOnibus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // CORRIGIDO: usa req.user.id
+        if (!req.user) {
+            // Este caso não deve ser alcançado se o middleware 'protect' estiver funcionando,
+            // mas satisfaz a verificação de tipos do TypeScript e torna o código mais robusto.
+            return res.status(401).json({ success: false, message: 'Usuário não autenticado.' });
+        }
+
         const onibus = await Onibus.findOne({ motorista: req.user.id }).populate('motorista', 'nome email');
 
         if (!onibus) {
@@ -107,8 +112,11 @@ export const getMyOnibus = async (req: Request, res: Response, next: NextFunctio
 // @access  Private (motorista)
 export const updateMyOnibusStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: 'Usuário não autenticado.' });
+        }
+
         const { status } = req.body;
-        // CORRIGIDO: usa req.user.id
         const onibus = await Onibus.findOneAndUpdate(
             { motorista: req.user.id },
             { status },
@@ -131,8 +139,11 @@ export const updateMyOnibusStatus = async (req: Request, res: Response, next: Ne
 // @access  Private (motorista)
 export const updateMyOnibusLocation = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: 'Usuário não autenticado.' });
+        }
+
         const { latitude, longitude } = req.body;
-        // CORRIGIDO: usa req.user.id
         const onibus = await Onibus.findOneAndUpdate(
             { motorista: req.user.id },
             { latitude, longitude, ultimaLocalizacao: new Date() }, // Adicionamos o campo de última localização

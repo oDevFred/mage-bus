@@ -62,11 +62,17 @@ export const login = async (req: Request, res: Response) => {
 // @access  Private
 export const getMe = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const userFound = await Usuario.findById(req.user.id);
-        if (!userFound) {
-            return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: 'Usuário não autenticado' });
         }
-        res.status(200).json({ success: true, data: userFound });
+
+        const user = await Usuario.findById(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'Usuário não encontrado' });
+        }
+
+        res.status(200).json({ success: true, data: user });
     } catch (error: any) {
         res.status(500).json({ success: false, message: error.message });
     }
